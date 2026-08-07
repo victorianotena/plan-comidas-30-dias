@@ -1,7 +1,7 @@
 
 // Servicio que guarda la web en el movil para que funcione sin cobertura.
-var VERSION = 'plan-2fa9fbe0';
-var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "coste.html", "nutrientes.html", "progreso.html", "guia.html", "estilo.css?v=2fa9fbe0", "app.js?v=2fa9fbe0", "plan.json?v=2fa9fbe0", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
+var VERSION = 'plan-80683887';
+var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "coste.html", "nutrientes.html", "progreso.html", "guia.html", "estilo.css?v=80683887", "app.js?v=80683887", "plan.json?v=80683887", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) {
@@ -12,6 +12,11 @@ self.addEventListener('install', function (e) {
         if (r.ok) return c.put(f, r);
       }).catch(function () {});
     }));
+  }).then(function () {
+    // Entra en vigor sin esperar a que se cierren las pestanias abiertas.
+    // Es seguro porque cada version tiene sus propias direcciones (?v=...),
+    // y evita que la version nueva se quede esperando indefinidamente.
+    return self.skipWaiting();
   }));
 });
 
