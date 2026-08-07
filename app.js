@@ -183,7 +183,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=80683887').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=516777a8').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -310,57 +310,22 @@
 })();
 
 // ============================================================ APP INSTALABLE
+// Las actualizaciones son SILENCIOSAS a proposito.
+// Cada version tiene sus propias direcciones (?v=...) y el service worker se
+// activa solo, asi que la version nueva entra sin que el usuario haga nada:
+// la vera la proxima vez que abra la app. No hay avisos ni recargas
+// automaticas, que es de donde salian los bucles.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    var caja = document.getElementById('nuevaVersion');
-    var btn  = document.getElementById('btnActualizar');
-    // ¿habia ya una version controlando la pagina? Si no, es la primera visita
-    // y no hay que recargar nada cuando tome el control.
-    var habiaControl = !!navigator.serviceWorker.controller;
-    var recargando = false;
-
-    var recargarUnaVez = function () {
-      if (recargando) return;
-      recargando = true;
-      location.reload();
-    };
-
-    // La recarga se hace AQUI, cuando la version nueva ya manda de verdad.
-    // Antes se recargaba nada mas pulsar el boton, sin esperar: la pagina se
-    // iba antes de que la orden llegase y el aviso volvia a salir sin parar.
-    navigator.serviceWorker.addEventListener('controllerchange', function () {
-      if (habiaControl) recargarUnaVez();
-    });
-
     navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
       .then(function (reg) {
-        var ofrecer = function (sw) {
-          if (!sw || !caja || !habiaControl) return;
-          caja.hidden = false;
-          btn.onclick = function () {
-            btn.disabled = true;
-            btn.textContent = 'Actualizando…';
-            sw.postMessage('actualizar');
-            // Red de seguridad: si en 4 segundos no ha tomado el control, recarga igual.
-            setTimeout(recargarUnaVez, 4000);
-          };
-        };
-
-        if (reg.waiting) ofrecer(reg.waiting);
-        reg.addEventListener('updatefound', function () {
-          var nuevo = reg.installing;
-          if (!nuevo) return;
-          nuevo.addEventListener('statechange', function () {
-            if (nuevo.state === 'installed') ofrecer(reg.waiting || nuevo);
-          });
-        });
-
-        // Comprobar novedades como mucho una vez cada media hora, no en cada vistazo.
+        // Buscar novedades como mucho una vez por hora, y nunca de forma
+        // que interrumpa lo que se esta mirando.
         var CLAVE = 'sw-ultima-comprobacion';
         var comprobar = function () {
-          var t = parseInt(sessionStorage.getItem(CLAVE) || '0', 10);
-          if (Date.now() - t < 1800000) return;
-          try { sessionStorage.setItem(CLAVE, String(Date.now())); } catch (e) {}
+          var t = parseInt(localStorage.getItem(CLAVE) || '0', 10);
+          if (Date.now() - t < 3600000) return;
+          try { localStorage.setItem(CLAVE, String(Date.now())); } catch (e) {}
           reg.update();
         };
         comprobar();
