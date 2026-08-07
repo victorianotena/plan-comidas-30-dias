@@ -166,6 +166,23 @@ tr:last-child td{ border-bottom:none }
   font-family:inherit; cursor:pointer; margin-bottom:20px; }
 .btn-reset:hover{ border-color:var(--acento); color:var(--acento) }
 
+/* ---- instalar en el movil ---- */
+.instalar{ background:var(--acento-claro); border:2px solid var(--acento); border-radius:16px;
+  padding:22px; margin:0 0 28px; }
+.inst-cab{ display:flex; align-items:center; gap:18px; }
+.inst-icono{ width:64px; height:64px; border-radius:14px; flex:0 0 auto;
+  box-shadow:var(--sombra); }
+.inst-tit{ font-family:Georgia,"Iowan Old Style",serif; font-weight:400; font-size:24px;
+  margin:0 0 4px; border:none; padding:0; color:var(--acento); }
+.inst-sub{ margin:0; color:var(--suave); font-size:17px; }
+.inst-nota{ margin:14px 0 0; font-size:16px; color:var(--suave); }
+.inst-ok{ margin:16px 0 0; font-weight:700; color:var(--verde); font-size:18px; }
+.instalar ol.pasos li{ font-size:17.5px; padding-bottom:16px; }
+.instalar ol.pasos li::before{ background:var(--acento); }
+@media (max-width:520px){
+  .inst-cab{ flex-direction:column; align-items:flex-start; gap:12px }
+}
+
 /* ---- que toca hoy ---- */
 .hoy{ background:var(--tarjeta); border:2px solid var(--acento); border-radius:16px;
   padding:22px; margin:0 0 34px; box-shadow:var(--sombra); }

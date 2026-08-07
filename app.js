@@ -315,3 +315,96 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(function () {});
   });
 }
+
+(function () {
+  'use strict';
+  var caja = document.getElementById('instalar');
+  if (!caja) return;
+  var accion = document.getElementById('instAccion');
+  var sub = document.getElementById('instSub');
+
+  // ¿ya esta instalada? entonces no hace falta decir nada
+  var yaInstalada = window.matchMedia('(display-mode: standalone)').matches ||
+                    window.navigator.standalone === true;
+  if (yaInstalada) return;
+
+  var ua = navigator.userAgent;
+  var esIOS = /iPad|iPhone|iPod/.test(ua) ||
+              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var esAndroid = /Android/.test(ua);
+  var esFirefox = /Firefox/.test(ua);
+  var esSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(ua);
+
+  var pasos = function (lista, nota) {
+    var h = '<ol class="pasos" style="margin-top:18px">';
+    lista.forEach(function (p) { h += '<li>' + p + '</li>'; });
+    h += '</ol>';
+    if (nota) h += '<p class="inst-nota">' + nota + '</p>';
+    return h;
+  };
+
+  // 1) Chromium (Android y escritorio): boton real de instalacion
+  var evento = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    evento = e;
+    accion.innerHTML = '<button type="button" class="enlace-video" id="btnInstalar" ' +
+      'style="border:none;cursor:pointer;font-size:19px;margin-top:16px">' +
+      'Instalar en este dispositivo</button>' +
+      '<p class="inst-nota">Un toque y listo. Ocupa menos de un megabyte.</p>';
+    document.getElementById('btnInstalar').addEventListener('click', function () {
+      evento.prompt();
+      evento.userChoice.then(function (r) {
+        if (r.outcome === 'accepted') {
+          accion.innerHTML = '<p class="inst-ok">Instalada. Búscala en la pantalla de inicio.</p>';
+        }
+      });
+    });
+    caja.hidden = false;
+  });
+
+  window.addEventListener('appinstalled', function () {
+    accion.innerHTML = '<p class="inst-ok">Instalada. Búscala en la pantalla de inicio.</p>';
+  });
+
+  // 2) Instrucciones segun el movil, por si el navegador no ofrece el boton
+  setTimeout(function () {
+    if (evento) return;   // ya hay boton real, no hacen falta instrucciones
+    if (esIOS) {
+      sub.textContent = 'En iPhone y iPad se añade a mano, desde Safari.';
+      accion.innerHTML = pasos([
+        'Abre esta página en <strong>Safari</strong> (no funciona desde Chrome ni desde Instagram).',
+        'Toca el botón <strong>Compartir</strong>: el cuadrado con la flecha hacia arriba, ' +
+        'abajo en el centro de la pantalla.',
+        'Baja por la lista y toca <strong>«Añadir a pantalla de inicio»</strong>.',
+        'Toca <strong>«Añadir»</strong> arriba a la derecha.'
+      ], 'Safari no enseña ningún aviso automático: hay que hacerlo así.');
+    } else if (esAndroid && esFirefox) {
+      sub.textContent = 'En Firefox para Android se añade desde el menú.';
+      accion.innerHTML = pasos([
+        'Toca el <strong>menú de tres puntos</strong>, arriba a la derecha.',
+        'Toca <strong>«Instalar»</strong> o <strong>«Añadir a la pantalla de inicio»</strong>.'
+      ]);
+    } else if (esAndroid) {
+      sub.textContent = 'En Android se añade desde el menú del navegador.';
+      accion.innerHTML = pasos([
+        'Toca el <strong>menú de tres puntos</strong>, arriba a la derecha.',
+        'Toca <strong>«Añadir a pantalla de inicio»</strong> o <strong>«Instalar aplicación»</strong>.',
+        'Confirma tocando <strong>«Instalar»</strong>.'
+      ], 'Si no aparece la opción, prueba a abrirla en Chrome.');
+    } else if (esSafari) {
+      sub.textContent = 'En Safari de Mac se añade desde el Dock.';
+      accion.innerHTML = pasos([
+        'En el menú <strong>Archivo</strong>, elige <strong>«Añadir al Dock»</strong>.'
+      ]);
+    } else {
+      sub.textContent = 'En el ordenador se instala desde la barra de direcciones.';
+      accion.innerHTML = pasos([
+        'Busca el icono de <strong>instalar</strong> (una pantalla con una flecha) ' +
+        'a la derecha de la barra de direcciones.',
+        'También está en el menú del navegador, como <strong>«Instalar…»</strong>.'
+      ], 'Si no lo ves, no pasa nada: la web funciona igual desde el navegador.');
+    }
+    caja.hidden = false;
+  }, 1200);
+})();
