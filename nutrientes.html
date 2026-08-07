@@ -12,8 +12,14 @@
 <a class="saltar" href="#principal">Saltar al contenido</a>
 <header class="cab">
   <div class="contenido">
-    <p class="marca"><a href="index.html">Plan de comidas · 30 días</a></p>
-    <nav class="menu" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="compra.html">La compra</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html" aria-current="page" class="actual">Nutrientes</a><a href="guia.html">Guía</a></nav>
+    <div class="barra">
+      <p class="marca"><a href="index.html">Plan de comidas · 30 días</a></p>
+      <button type="button" class="btn-menu" id="btnMenu" aria-expanded="false" aria-controls="menuPrincipal">
+        <span class="rayas" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="btn-menu-txt">Menú</span>
+      </button>
+    </div>
+    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html" aria-current="page" class="actual">Nutrientes</a><a href="guia.html">Guía</a></nav>
   </div>
 </header>
 <main id="principal" class="contenido">
@@ -46,7 +52,7 @@
 <tr><td>Sodio</td><td class="num">2.936 mg</td><td class="num">menos de 2.000 mg</td><td class="num ojo">147 %</td></tr>
 </tbody></table></div>
 <h2>Los cuatro puntos a vigilar</h2>
-<div class="aviso atencion"><span class="et">Vitamina D · el más importante</span><p>Solo se cubre el 27 %. Esto <strong>no es un fallo del plan</strong>: casi ninguna dieta cubre la vitamina D solo con comida, ni siquiera en España. La mayoría de multivitamínicos llevan entre 5 y 10 microgramos, que se quedarían cortos.</p><p><strong>Qué hacer:</strong> mirar cuántos microgramos lleva el multivitamínico que ya se toma y comentarlo con el médico. La dosis correcta se decide con una analítica, no a ojo.</p></div>
+<div class="aviso atencion"><span class="et">Vitamina D · el más importante</span><p>La comida del plan aporta <strong>4 microgramos al día</strong> de los 15 recomendados. Esto <strong>no es un fallo del plan</strong>: casi ninguna dieta cubre la vitamina D solo con comida, ni siquiera en España.</p><p><strong>El multivitamínico no lo resuelve.</strong> Multicentrum Adultos lleva <strong>5 microgramos</strong> por comprimido, así que la suma queda en 9 de 15: el <strong>60 %</strong>. Siguen faltando 6 microgramos al día.</p><div class="tabla-caja" style="margin:16px 0"><table><thead><tr><th>De dónde viene</th><th style="text-align:right">Microgramos al día</th></tr></thead><tbody><tr><td>Comida del plan (sobre todo el salmón)</td><td class="num">4,0</td></tr><tr><td>Multicentrum Adultos, 1 comprimido</td><td class="num">5,0</td></tr><tr><td><strong>Total</strong></td><td class="num"><strong>9,0</strong></td></tr><tr><td>Recomendado</td><td class="num">15,0</td></tr><tr><td><strong>Falta</strong></td><td class="num ojo"><strong>6,0</strong></td></tr></tbody></table></div><p><strong>Qué hacer:</strong> comentarlo con el médico y pedir una analítica de vitamina D. La dosis correcta depende de tus niveles en sangre, no de una tabla: por eso aquí no se recomienda ninguna cantidad concreta. Es la única carencia del plan que no se arregla con la compra.</p></div>
 <div class="aviso atencion"><span class="et">Sodio · sal</span><p>2.936 mg al día frente a los 2.000 que recomienda la Organización Mundial de la Salud. Aun así está <strong>por debajo de la media española</strong>, que ronda los 3.700 mg.</p><p><strong>Qué hacer:</strong> echar menos sal al cocinar (los condimentos son unos 195 mg al día y eso se controla con la mano) y buscar tortillas y salsas bajas en sal.</p></div>
 <div class="aviso atencion"><span class="et">Yodo</span><p>Se cubre el 84 %. <strong>Qué hacer:</strong> usar sal yodada en lugar de sal normal. Cubre lo que falta y no cuesta nada.</p></div>
 <div class="aviso atencion"><span class="et">Vitamina E</span><p>Se cubre el 84 %. <strong>Qué hacer:</strong> un poco más de aceite de oliva virgen extra, o un puñado de almendras algún día de la semana.</p></div>
@@ -62,5 +68,7 @@
   rel="noopener">Dez Cerimagic (@_aussiefitness)</a>. Las cantidades han sido recalculadas
   ingrediente a ingrediente.</p>
 </footer>
+<button type="button" class="arriba" id="btnArriba" aria-label="Volver arriba">&#8593;</button>
+<script src="app.js"></script>
 </body>
 </html>

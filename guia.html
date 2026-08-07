@@ -12,8 +12,14 @@
 <a class="saltar" href="#principal">Saltar al contenido</a>
 <header class="cab">
   <div class="contenido">
-    <p class="marca"><a href="index.html">Plan de comidas · 30 días</a></p>
-    <nav class="menu" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="compra.html">La compra</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html">Nutrientes</a><a href="guia.html" aria-current="page" class="actual">Guía</a></nav>
+    <div class="barra">
+      <p class="marca"><a href="index.html">Plan de comidas · 30 días</a></p>
+      <button type="button" class="btn-menu" id="btnMenu" aria-expanded="false" aria-controls="menuPrincipal">
+        <span class="rayas" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="btn-menu-txt">Menú</span>
+      </button>
+    </div>
+    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html">Nutrientes</a><a href="guia.html" aria-current="page" class="actual">Guía</a></nav>
   </div>
 </header>
 <main id="principal" class="contenido">
@@ -74,5 +80,7 @@
   rel="noopener">Dez Cerimagic (@_aussiefitness)</a>. Las cantidades han sido recalculadas
   ingrediente a ingrediente.</p>
 </footer>
+<button type="button" class="arriba" id="btnArriba" aria-label="Volver arriba">&#8593;</button>
+<script src="app.js"></script>
 </body>
 </html>

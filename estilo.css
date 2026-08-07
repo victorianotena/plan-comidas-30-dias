@@ -33,13 +33,26 @@ body{ margin:0; background:var(--papel); color:var(--tinta);
 
 /* ---- cabecera y menu ---- */
 .cab{ background:var(--tarjeta); border-bottom:2px solid var(--linea); position:sticky; top:0; z-index:30; }
+.barra{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .marca{ margin:0; font-size:16px; letter-spacing:.08em;
   text-transform:uppercase; font-weight:700; }
 .marca a{ color:var(--acento); text-decoration:none; display:inline-flex; align-items:center;
   min-height:48px; padding:4px 0; }
 .marca a:hover{ text-decoration:underline; }
-/* El menu SE PARTE en varias filas en vez de desplazarse: asi se ven las 6 secciones
-   siempre. Un menu con desplazamiento lateral esconde opciones. */
+
+/* Boton de menu: solo aparece en pantallas pequenas */
+.btn-menu{ display:none; align-items:center; gap:10px; min-height:48px; padding:0 18px;
+  background:var(--acento); color:var(--papel); border:none; border-radius:10px;
+  font:700 17px/1 inherit; font-family:inherit; cursor:pointer; }
+.btn-menu:focus-visible{ outline:3px solid var(--tinta); outline-offset:3px; }
+.rayas{ display:flex; flex-direction:column; gap:4px; width:20px; }
+.rayas span{ display:block; height:3px; background:var(--papel); border-radius:2px;
+  transition:transform .2s, opacity .2s; }
+.btn-menu[aria-expanded="true"] .rayas span:nth-child(1){ transform:translateY(7px) rotate(45deg) }
+.btn-menu[aria-expanded="true"] .rayas span:nth-child(2){ opacity:0 }
+.btn-menu[aria-expanded="true"] .rayas span:nth-child(3){ transform:translateY(-7px) rotate(-45deg) }
+
+/* En pantalla grande el menu esta siempre desplegado y en varias filas. */
 .menu{ display:flex; flex-wrap:wrap; gap:8px; padding-bottom:12px; }
 .menu a{ flex:1 1 auto; display:flex; align-items:center; justify-content:center;
   min-height:48px; padding:0 16px; text-align:center;
@@ -135,10 +148,80 @@ tr:last-child td{ border-bottom:none }
 .indice h3{ color:var(--acento); margin-bottom:6px }
 .indice p{ margin:0; color:var(--suave); font-size:18px }
 
+/* ---- lista de la compra con casillas ---- */
+.marcable{ cursor:pointer; user-select:none; }
+.marcable td:first-child{ padding-left:52px; position:relative; }
+.marcable td:first-child::before{ content:""; position:absolute; left:16px; top:50%;
+  transform:translateY(-50%); width:24px; height:24px; border:2px solid var(--linea);
+  border-radius:6px; background:var(--tarjeta); }
+.marcable.hecho td:first-child::before{ background:var(--verde); border-color:var(--verde); }
+.marcable.hecho td:first-child::after{ content:"\2713"; position:absolute; left:21px; top:50%;
+  transform:translateY(-50%); color:var(--tarjeta); font-weight:700; font-size:17px; }
+.marcable.hecho td{ opacity:.5; text-decoration:line-through; }
+.marcable:hover td:first-child::before{ border-color:var(--acento); }
+.contador{ display:inline-block; background:var(--acento-claro); color:var(--acento);
+  font-weight:700; padding:6px 14px; border-radius:8px; margin-left:10px; font-size:16px; }
+.btn-reset{ min-height:48px; padding:0 20px; background:var(--tarjeta); color:var(--tinta);
+  border:2px solid var(--linea); border-radius:10px; font:600 16px/1 inherit;
+  font-family:inherit; cursor:pointer; margin-bottom:20px; }
+.btn-reset:hover{ border-color:var(--acento); color:var(--acento) }
+
+/* ---- indice de saltos rapidos ---- */
+.indice-recetas{ background:var(--tarjeta); border:2px solid var(--linea); border-radius:14px;
+  padding:20px 22px; margin:0 0 32px; box-shadow:var(--sombra); }
+.grupo-idx{ font-size:15px; letter-spacing:.07em; text-transform:uppercase; font-weight:700;
+  color:var(--acento); margin:18px 0 10px; }
+.grupo-idx:first-of-type{ margin-top:6px }
+ul.chips{ list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px; }
+ul.chips li{ margin:0; padding:0; border:none; display:block; }
+ul.chips a{ display:flex; align-items:center; min-height:48px; padding:0 16px;
+  border:2px solid var(--linea); border-radius:10px; text-decoration:none;
+  color:var(--tinta); font-weight:600; font-size:16.5px; background:var(--papel); }
+ul.chips a:hover{ border-color:var(--acento); color:var(--acento) }
+ul.chips a:focus-visible{ outline:3px solid var(--acento); outline-offset:2px }
+
+/* ---- enlace desde el dia a su receta ---- */
+a.ir-receta{ display:inline-flex; align-items:center; gap:6px; color:var(--acento);
+  text-decoration:none; font-weight:600; border-bottom:2px solid transparent;
+  min-height:44px; }
+a.ir-receta:hover{ border-bottom-color:var(--acento) }
+a.ir-receta:focus-visible{ outline:3px solid var(--acento); outline-offset:2px; border-radius:4px }
+.flecha{ font-size:20px; line-height:1; opacity:.7 }
+:target{ scroll-margin-top:110px }
+
+/* ---- volver arriba ---- */
+.arriba{ position:fixed; right:18px; bottom:18px; width:56px; height:56px; border-radius:50%;
+  background:var(--acento); color:var(--papel); border:none; font-size:26px; cursor:pointer;
+  box-shadow:var(--sombra); opacity:0; pointer-events:none; transition:opacity .2s; z-index:40; }
+.arriba.visible{ opacity:1; pointer-events:auto }
+.arriba:focus-visible{ outline:3px solid var(--tinta); outline-offset:3px }
+
+/* ---- bloques plegables ---- */
+details.plegable{ border:2px solid var(--linea); border-radius:14px; background:var(--tarjeta);
+  margin-bottom:18px; overflow:hidden; }
+details.plegable > summary{ list-style:none; cursor:pointer; padding:18px 22px;
+  font-family:Georgia,"Iowan Old Style",serif; font-size:22px; min-height:48px;
+  display:flex; align-items:center; justify-content:space-between; gap:14px; }
+details.plegable > summary::-webkit-details-marker{ display:none }
+details.plegable > summary::after{ content:"\25BC"; font-size:15px; color:var(--acento);
+  transition:transform .2s; font-family:inherit; }
+details.plegable[open] > summary::after{ transform:rotate(180deg) }
+details.plegable > summary:hover{ color:var(--acento) }
+details.plegable > summary:focus-visible{ outline:3px solid var(--acento); outline-offset:-3px }
+details.plegable > .cuerpo{ padding:0 22px 22px }
+
+@media (max-width:760px){
+  .btn-menu{ display:flex }
+  .menu{ display:none; padding-bottom:14px }
+  .menu.abierto{ display:flex; flex-direction:column }
+  .menu a{ width:100%; justify-content:flex-start; font-size:18px; padding:0 20px }
+}
 @media (max-width:620px){
   .rejilla,.indice{grid-template-columns:1fr}
-  .menu a{ flex:1 1 46%; font-size:17px }
   .datos{ grid-template-columns:1fr 1fr }
+  .marcable td:first-child{ padding-left:48px }
 }
 @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
-@media print{ .cab,.saltar{display:none} body{background:#fff;color:#000;font-size:12pt} }
+@media print{ .cab,.saltar,.arriba,.btn-reset{display:none}
+  body{background:#fff;color:#000;font-size:12pt}
+  details.plegable > .cuerpo{display:block!important} }
