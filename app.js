@@ -183,7 +183,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=2fa9fbe0').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -312,7 +312,32 @@
 // ============================================================ APP INSTALABLE
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function () {});
+    // updateViaCache:'none' obliga a comprobar sw.js contra el servidor,
+    // en vez de reutilizar la copia guardada por el navegador.
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+      .then(function (reg) {
+        // avisa cuando hay una version nueva esperando
+        var avisar = function (sw) {
+          if (!sw) return;
+          sw.addEventListener('statechange', function () {
+            if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+              var caja = document.getElementById('nuevaVersion');
+              if (!caja) return;
+              caja.hidden = false;
+              document.getElementById('btnActualizar').onclick = function () {
+                sw.postMessage('actualizar');
+                location.reload();
+              };
+            }
+          });
+        };
+        avisar(reg.installing);
+        reg.addEventListener('updatefound', function () { avisar(reg.installing); });
+        // comprueba si hay novedades cada vez que se vuelve a la pagina
+        document.addEventListener('visibilitychange', function () {
+          if (!document.hidden) reg.update();
+        });
+      }).catch(function () {});
   });
 }
 
