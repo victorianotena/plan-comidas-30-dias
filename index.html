@@ -5,8 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="Plan de comidas de 30 días con cantidades exactas, recetas y lista de la compra.">
+<meta name="theme-color" content="#5E2740">
 <title>Inicio · Plan de comidas</title>
 <link rel="stylesheet" href="estilo.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.png" sizes="64x64">
+<link rel="apple-touch-icon" href="icono-apple.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Plan de comidas">
 </head>
 <body>
 <a class="saltar" href="#principal">Saltar al contenido</a>
@@ -19,12 +26,32 @@
         <span class="btn-menu-txt">Menú</span>
       </button>
     </div>
-    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html" aria-current="page" class="actual">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html">Nutrientes</a><a href="guia.html">Guía</a></nav>
+    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html" aria-current="page" class="actual">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html">Nutrientes</a><a href="progreso.html">Mi progreso</a><a href="guia.html">Guía</a></nav>
   </div>
 </header>
 <main id="principal" class="contenido">
 <h1>Plan de comidas para 30 días</h1>
 <p class="entrada">Una comida al día, con todo pesado y calculado. Aquí encontrarás <strong>qué cocinar cada día</strong>, <strong>cuántos gramos poner en la báscula</strong>, <strong>cómo se prepara cada receta</strong> y <strong>qué hay que comprar</strong>.</p>
+
+<section class="hoy" id="hoy" hidden>
+  <div class="hoy-cab">
+    <button type="button" class="hoy-nav" id="diaMenos" aria-label="Día anterior">&minus;</button>
+    <div class="hoy-num">
+      <span class="hoy-et">Vas por el</span>
+      <strong id="hoyDia">día 1</strong>
+      <span class="hoy-de" id="hoyBloque">Bloque 1</span>
+    </div>
+    <button type="button" class="hoy-nav" id="diaMas" aria-label="Día siguiente">+</button>
+  </div>
+  <div id="hoyCuerpo" aria-live="polite"></div>
+  <div class="hoy-pie">
+    <a class="enlace-video" href="plan.html" id="hoyEnlacePlan">Ver los 30 días</a>
+    <button type="button" class="btn-reset" id="hoyReiniciar" style="margin:0">Volver al día 1</button>
+  </div>
+</section>
+<noscript><p class="aviso atencion">El seguimiento del día necesita JavaScript. Sin él,
+consulta directamente <a href="plan.html">los 30 días</a>.</p></noscript>
+
 <div class="aviso"><span class="et">Cómo funciona</span><p>No se cocina todos los días. El mes se divide en <strong>6 bloques de 5 días</strong>. Al empezar cada bloque se cocina una tanda grande y el resto de días solo hay que montar el plato y calentar. En total son <strong>6 sesiones de cocina al mes</strong>.</p></div>
 <h2>Por dónde empezar</h2>
 <div class="indice">
@@ -34,6 +61,7 @@
 <a href="compra.html"><h3>La compra</h3><p>Qué comprar para 15 y para 30 días</p></a>
 <a href="coste.html"><h3>Lo que cuesta</h3><p>Cuánto vale la compra del mes</p></a>
 <a href="nutrientes.html"><h3>Nutrientes</h3><p>Qué aporta el plan y qué falta</p></a>
+<a href="progreso.html"><h3>Mi progreso</h3><p>Apunta tu peso y mira si vas al ritmo previsto</p></a>
 <a href="guia.html"><h3>Guía</h3><p>Cómo pesar, conservar y congelar</p></a>
 </div>
 <h2>Lo que conviene saber antes</h2>

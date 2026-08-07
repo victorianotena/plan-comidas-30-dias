@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Apunta tu peso y comprueba si el plan va al ritmo previsto. Los datos se quedan en tu móvil.">
+<meta name="theme-color" content="#5E2740">
+<title>Mi progreso · Plan de comidas</title>
+<link rel="stylesheet" href="estilo.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.png" sizes="64x64">
+<link rel="apple-touch-icon" href="icono-apple.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Plan de comidas">
+</head>
+<body>
+<a class="saltar" href="#principal">Saltar al contenido</a>
+<header class="cab">
+  <div class="contenido">
+    <div class="barra">
+      <p class="marca"><a href="index.html">Plan de comidas · 30 días</a></p>
+      <button type="button" class="btn-menu" id="btnMenu" aria-expanded="false" aria-controls="menuPrincipal">
+        <span class="rayas" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="btn-menu-txt">Menú</span>
+      </button>
+    </div>
+    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html">Nutrientes</a><a href="progreso.html" aria-current="page" class="actual">Mi progreso</a><a href="guia.html">Guía</a></nav>
+  </div>
+</header>
+<main id="principal" class="contenido">
+<h1>Mi progreso</h1>
+<p class="entrada">Apunta tu peso de vez en cuando y comprueba si el plan va al ritmo previsto. <strong>Los datos se guardan solo en este móvil</strong>: no se suben a internet ni los ve nadie más.</p>
+<div class="aviso"><span class="et">Por qué merece la pena apuntarlo</span><p>El plan está calculado para perder <strong>alrededor de 1 kilo por semana</strong>. Si vas mucho más rápido, conviene subir las calorías; si vas mucho más lento, algo no cuadra con las cantidades. Sin anotarlo no hay forma de saberlo.</p><p>Lo suyo es pesarse <strong>siempre en las mismas condiciones</strong>: por la mañana, en ayunas, después de ir al baño y antes de beber nada. Una o dos veces por semana es suficiente; a diario el peso baila mucho por el agua y despista.</p></div>
+<h2>Apuntar un peso</h2>
+<form id="formPeso" class="tarjeta form-peso"><div class="campo"><label for="fechaPeso">Fecha</label><input type="date" id="fechaPeso" required></div><div class="campo"><label for="valorPeso">Peso en kilos</label><input type="number" id="valorPeso" step="0.1" min="20" max="400" inputmode="decimal" placeholder="Por ejemplo 98,4" required></div><button type="submit" class="enlace-video" style="border:none;cursor:pointer">Apuntar</button></form>
+<h2>Cómo va</h2>
+<div id="resumenPeso"></div>
+<div class="tarjeta" style="padding:14px"><svg id="grafica" viewBox="0 0 600 260" role="img" aria-label="Gráfica de la evolución del peso" style="width:100%;height:auto;color:var(--tinta)"></svg><p style="margin:10px 0 0;font-size:16px;color:var(--suave)">La línea continua es tu peso. La línea de puntos es el ritmo previsto de 1 kilo por semana.</p></div>
+<h2>Todos los pesos apuntados</h2>
+<div class="tabla-caja"><table id="tablaPeso"><thead><tr><th>Fecha</th><th style="text-align:right">Peso</th><th>&nbsp;</th></tr></thead><tbody></tbody></table></div>
+<button type="button" class="btn-reset" id="borrarTodo">Borrar todo el historial</button>
+<div class="aviso atencion"><span class="et">Una advertencia importante</span><p>Esta página <strong>no sustituye a un médico ni a un dietista</strong>. Si pierdes peso muy rápido, te notas sin fuerza, duermes mal o algo no va bien, para y consúltalo. El peso en la báscula tampoco lo dice todo: también cuenta cómo te encuentras y si mantienes la fuerza en los entrenamientos.</p></div>
+</main>
+<footer class="pie contenido">
+  <p>Las cantidades salen de una hoja de cálculo que verifica cada día. Todos los días
+  llegan a <strong>190 gramos de proteína como mínimo</strong> y se quedan entre
+  <strong>2.000 y 2.200 calorías</strong>.</p>
+  <p>Las recetas marcadas con enlace son de <a href="https://www.instagram.com/_aussiefitness/"
+  rel="noopener">Dez Cerimagic (@_aussiefitness)</a>. Las cantidades han sido recalculadas
+  ingrediente a ingrediente.</p>
+</footer>
+<button type="button" class="arriba" id="btnArriba" aria-label="Volver arriba">&#8593;</button>
+<script src="app.js"></script>
+</body>
+</html>

@@ -129,3 +129,189 @@
 
   actualizarContador();
 })();
+
+// ============================================================ QUE TOCA HOY
+(function () {
+  'use strict';
+  var caja = document.getElementById('hoy');
+  if (!caja) return;
+  var CLAVE = 'plan-dia-actual';
+  var dia = parseInt(localStorage.getItem(CLAVE) || '1', 10);
+  if (!(dia >= 1 && dia <= 30)) dia = 1;
+  var datos = null;
+
+  var pintar = function () {
+    if (!datos) return;
+    var d = datos[String(dia)];
+    document.getElementById('hoyDia').textContent = 'día ' + dia;
+    document.getElementById('hoyBloque').textContent = d.bloque + ' de 6';
+    var h = '';
+    if (d.cocinaHoy) {
+      h += '<div class="aviso" style="margin:18px 0"><span class="et">Hoy toca cocinar en tanda</span>' +
+           '<p>' + d.tanda + '</p></div>';
+    }
+    h += '<p class="hoy-plato">' + d.titulo + '</p>';
+    if (d.recetas.length) {
+      h += '<p class="etiqueta">Ya cocinado</p><ul class="lista caja-rac">';
+      d.recetas.forEach(function (r) {
+        h += '<li><a class="ir-receta" href="' + r.enlace + '">' + r.nombre +
+             '<span class="flecha" aria-hidden="true">&rsaquo;</span></a>' +
+             '<span class="cant">' + r.cantidad + '</span></li>';
+      });
+      h += '</ul>';
+    }
+    if (d.pesar.length) {
+      h += '<p class="etiqueta">Pesar y preparar</p><ul class="lista">';
+      d.pesar.forEach(function (p) {
+        h += '<li><span>' + p.nombre + '</span><span class="cant">' + p.gramos + '</span></li>';
+      });
+      h += '</ul>';
+    }
+    document.getElementById('hoyCuerpo').innerHTML = h;
+    document.getElementById('diaMenos').disabled = (dia === 1);
+    document.getElementById('diaMas').disabled = (dia === 30);
+    localStorage.setItem(CLAVE, String(dia));
+  };
+
+  var mover = function (n) {
+    dia = Math.min(30, Math.max(1, dia + n));
+    pintar();
+  };
+  document.getElementById('diaMenos').addEventListener('click', function () { mover(-1); });
+  document.getElementById('diaMas').addEventListener('click', function () { mover(1); });
+  document.getElementById('hoyReiniciar').addEventListener('click', function () {
+    dia = 1; pintar();
+  });
+
+  fetch('plan.json').then(function (r) { return r.json(); }).then(function (j) {
+    datos = j; caja.hidden = false; pintar();
+  }).catch(function () { /* sin datos, la seccion se queda oculta */ });
+})();
+
+// ============================================================ REGISTRO DE PESO
+(function () {
+  'use strict';
+  var form = document.getElementById('formPeso');
+  if (!form) return;
+  var CLAVE = 'registro-peso';
+  var datos;
+  try { datos = JSON.parse(localStorage.getItem(CLAVE) || '[]'); } catch (e) { datos = []; }
+
+  var guardar = function () {
+    datos.sort(function (a, b) { return a.f < b.f ? -1 : 1; });
+    try { localStorage.setItem(CLAVE, JSON.stringify(datos)); } catch (e) {}
+  };
+
+  var fmt = function (iso) {
+    var p = iso.split('-');
+    return p[2] + '/' + p[1] + '/' + p[0].slice(2);
+  };
+
+  var grafica = function () {
+    var svg = document.getElementById('grafica');
+    if (datos.length < 2) {
+      svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="currentColor" ' +
+        'font-size="17">Apunta al menos dos pesos para ver la gráfica</text>';
+      return;
+    }
+    var W = 600, H = 260, mx = 46, my = 26;
+    var pesos = datos.map(function (d) { return d.p; });
+    var min = Math.min.apply(null, pesos) - 1, max = Math.max.apply(null, pesos) + 1;
+    var t0 = new Date(datos[0].f).getTime();
+    var t1 = new Date(datos[datos.length - 1].f).getTime();
+    var dias = Math.max(1, (t1 - t0) / 86400000);
+    var X = function (f) { return mx + ((new Date(f).getTime() - t0) / 86400000 / dias) * (W - mx - my); };
+    var Y = function (p) { return my + (1 - (p - min) / (max - min)) * (H - my * 2); };
+    var s = '';
+    // rejilla
+    for (var i = 0; i <= 4; i++) {
+      var v = min + (max - min) * i / 4, y = Y(v);
+      s += '<line x1="' + mx + '" y1="' + y + '" x2="' + (W - my) + '" y2="' + y +
+           '" stroke="currentColor" stroke-opacity=".15"/>' +
+           '<text x="' + (mx - 8) + '" y="' + (y + 5) + '" text-anchor="end" font-size="13" ' +
+           'fill="currentColor" fill-opacity=".65">' + v.toFixed(1) + '</text>';
+    }
+    // linea prevista: -1 kg por semana desde el primer peso
+    var prev0 = datos[0].p, prevFin = prev0 - (dias / 7) * 1;
+    if (prevFin > min && prevFin < max) {
+      s += '<line x1="' + X(datos[0].f) + '" y1="' + Y(prev0) + '" x2="' + X(datos[datos.length - 1].f) +
+           '" y2="' + Y(prevFin) + '" stroke="currentColor" stroke-opacity=".35" ' +
+           'stroke-dasharray="7 5" stroke-width="2"/>';
+    }
+    // linea real
+    var pts = datos.map(function (d) { return X(d.f) + ',' + Y(d.p); }).join(' ');
+    s += '<polyline points="' + pts + '" fill="none" stroke="var(--acento)" stroke-width="3" ' +
+         'stroke-linejoin="round" stroke-linecap="round"/>';
+    datos.forEach(function (d) {
+      s += '<circle cx="' + X(d.f) + '" cy="' + Y(d.p) + '" r="5" fill="var(--acento)"/>';
+    });
+    svg.innerHTML = s;
+  };
+
+  var resumen = function () {
+    var caja = document.getElementById('resumenPeso');
+    if (datos.length < 2) { caja.innerHTML = ''; return; }
+    var a = datos[0], b = datos[datos.length - 1];
+    var dias = Math.max(1, (new Date(b.f) - new Date(a.f)) / 86400000);
+    var dif = b.p - a.p;
+    var sem = dif / (dias / 7);
+    var juicio, clase;
+    if (sem > -0.3) { juicio = 'Vas más lento de lo previsto. Revisa que las cantidades sean las del plan.'; clase = 'atencion'; }
+    else if (sem >= -1.1) { juicio = 'Vas al ritmo previsto.'; clase = ''; }
+    else { juicio = 'Estás perdiendo más rápido de lo previsto. Conviene subir las calorías y comentarlo con tu médico.'; clase = 'atencion'; }
+    caja.innerHTML =
+      '<dl class="datos"><div><dt>Peso inicial</dt><dd>' + a.p.toFixed(1) + ' kg</dd></div>' +
+      '<div><dt>Peso actual</dt><dd>' + b.p.toFixed(1) + ' kg</dd></div>' +
+      '<div><dt>Diferencia</dt><dd>' + (dif > 0 ? '+' : '') + dif.toFixed(1) + ' kg</dd></div>' +
+      '<div><dt>Por semana</dt><dd>' + sem.toFixed(2) + ' kg</dd></div>' +
+      '<div><dt>Días registrados</dt><dd>' + Math.round(dias) + '</dd></div></dl>' +
+      '<div class="aviso ' + clase + '"><span class="et">Cómo va</span><p>' + juicio + '</p>' +
+      '<p>El plan prevé perder alrededor de <strong>1 kg por semana</strong>. ' +
+      'La línea de puntos de la gráfica es ese ritmo.</p></div>';
+  };
+
+  var tabla = function () {
+    var tb = document.querySelector('#tablaPeso tbody');
+    tb.innerHTML = datos.map(function (d, i) {
+      return '<tr><td>' + fmt(d.f) + '</td><td class="num">' + d.p.toFixed(1) + ' kg</td>' +
+             '<td><button type="button" class="btn-borrar" data-i="' + i + '">Borrar</button></td></tr>';
+    }).join('') || '<tr><td colspan="3">Todavía no hay ningún peso apuntado.</td></tr>';
+    tb.querySelectorAll('.btn-borrar').forEach(function (b) {
+      b.addEventListener('click', function () {
+        datos.splice(parseInt(b.dataset.i, 10), 1); guardar(); todo();
+      });
+    });
+  };
+
+  var todo = function () { tabla(); grafica(); resumen(); };
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = document.getElementById('fechaPeso').value;
+    var p = parseFloat(document.getElementById('valorPeso').value);
+    if (!f || !(p > 20 && p < 400)) return;
+    datos = datos.filter(function (d) { return d.f !== f; });
+    datos.push({ f: f, p: p });
+    guardar(); todo();
+    document.getElementById('valorPeso').value = '';
+  });
+
+  document.getElementById('borrarTodo').addEventListener('click', function () {
+    if (datos.length && confirm('¿Borrar todos los pesos apuntados?')) {
+      datos = []; guardar(); todo();
+    }
+  });
+
+  var hoy = new Date();
+  document.getElementById('fechaPeso').value =
+    hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') +
+    '-' + String(hoy.getDate()).padStart(2, '0');
+  todo();
+})();
+
+// ============================================================ APP INSTALABLE
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}

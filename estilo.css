@@ -166,6 +166,41 @@ tr:last-child td{ border-bottom:none }
   font-family:inherit; cursor:pointer; margin-bottom:20px; }
 .btn-reset:hover{ border-color:var(--acento); color:var(--acento) }
 
+/* ---- que toca hoy ---- */
+.hoy{ background:var(--tarjeta); border:2px solid var(--acento); border-radius:16px;
+  padding:22px; margin:0 0 34px; box-shadow:var(--sombra); }
+.hoy-cab{ display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding-bottom:16px; border-bottom:2px solid var(--linea); }
+.hoy-num{ text-align:center; flex:1 }
+.hoy-et{ display:block; font-size:14px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--suave); font-weight:700 }
+.hoy-num strong{ display:block; font-family:Georgia,serif; font-size:34px; font-weight:400;
+  color:var(--acento); line-height:1.1 }
+.hoy-de{ display:block; font-size:15px; color:var(--suave) }
+.hoy-nav{ flex:0 0 auto; width:56px; height:56px; border-radius:14px; border:2px solid var(--linea);
+  background:var(--papel); color:var(--acento); font-size:30px; line-height:1; cursor:pointer;
+  font-family:inherit; }
+.hoy-nav:hover:not(:disabled){ border-color:var(--acento) }
+.hoy-nav:disabled{ opacity:.3; cursor:default }
+.hoy-nav:focus-visible{ outline:3px solid var(--acento); outline-offset:2px }
+.hoy-plato{ font-family:Georgia,"Iowan Old Style",serif; font-size:26px; line-height:1.2;
+  margin:18px 0 4px; text-wrap:balance }
+.hoy-pie{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:22px;
+  padding-top:18px; border-top:2px solid var(--linea) }
+
+/* ---- registro de peso ---- */
+.form-peso{ display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; margin-bottom:26px }
+.campo{ display:flex; flex-direction:column; gap:6px; flex:1 1 190px }
+.campo label{ font-size:15px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--suave) }
+.campo input{ min-height:52px; padding:0 14px; font-size:18px; font-family:inherit;
+  border:2px solid var(--linea); border-radius:10px; background:var(--papel); color:var(--tinta) }
+.campo input:focus-visible{ outline:3px solid var(--acento); outline-offset:1px; border-color:var(--acento) }
+.btn-borrar{ min-height:44px; padding:0 16px; border:2px solid var(--linea); border-radius:9px;
+  background:var(--papel); color:var(--suave); font:600 15px/1 inherit; font-family:inherit;
+  cursor:pointer }
+.btn-borrar:hover{ border-color:var(--alerta); color:var(--alerta) }
+
 /* ---- indice de saltos rapidos ---- */
 .indice-recetas{ background:var(--tarjeta); border:2px solid var(--linea); border-radius:14px;
   padding:20px 22px; margin:0 0 32px; box-shadow:var(--sombra); }

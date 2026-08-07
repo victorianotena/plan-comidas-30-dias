@@ -5,8 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="Cómo pesar los alimentos, cuánto aguantan y qué significa cada palabra.">
+<meta name="theme-color" content="#5E2740">
 <title>Guía · Plan de comidas</title>
 <link rel="stylesheet" href="estilo.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.png" sizes="64x64">
+<link rel="apple-touch-icon" href="icono-apple.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Plan de comidas">
 </head>
 <body>
 <a class="saltar" href="#principal">Saltar al contenido</a>
@@ -19,7 +26,7 @@
         <span class="btn-menu-txt">Menú</span>
       </button>
     </div>
-    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html">Nutrientes</a><a href="guia.html" aria-current="page" class="actual">Guía</a></nav>
+    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html">Nutrientes</a><a href="progreso.html">Mi progreso</a><a href="guia.html" aria-current="page" class="actual">Guía</a></nav>
   </div>
 </header>
 <main id="principal" class="contenido">
@@ -38,7 +45,7 @@
 <h2>Cuánto aguanta cada preparación</h2>
 <div class="tabla-caja"><table><thead><tr><th>Receta</th><th>En la nevera</th><th>¿Se congela?</th></tr></thead><tbody>
 <tr><td>Taquitos buffalo de pollo</td><td>4 días en nevera, en recipiente hermético.</td><td class="ok">Sí. Congela crudos ya enrollados, separados con papel de horno.</td></tr>
-<tr><td>Lasaña alta en proteina</td><td>4 días en nevera.</td><td class="ok">Sí, por raciones ya cortadas.</td></tr>
+<tr><td>Lasaña alta en proteína</td><td>4 días en nevera.</td><td class="ok">Sí, por raciones ya cortadas.</td></tr>
 <tr><td>Burritos cremosos de ternera</td><td>4 días en nevera.</td><td class="ok">Sí, envueltos individualmente en papel de aluminio.</td></tr>
 <tr><td>Burritos de desayuno</td><td>4 días en nevera.</td><td class="ok">Sí, es la receta que mejor congela de todo el plan.</td></tr>
 <tr><td>Pasta chipotle con pollo</td><td>3 días en nevera.</td><td class="ojo">No recomendable: la salsa de yogur se corta al descongelar.</td></tr>
@@ -58,6 +65,22 @@
 <tr><td>Boronía</td><td>5 días en nevera.</td><td class="ok">Sí, congela muy bien por raciones.</td></tr>
 </tbody></table></div>
 <div class="aviso"><span class="et">Regla general del congelador</span><p>Lo que lleva <strong>salsa de yogur o de huevo</strong> (la carbonara, la pasta chipotle, las natillas) no congela bien: se corta al descongelar. Todo lo demás aguanta perfectamente entre uno y dos meses.</p><p>Congela siempre en <strong>raciones individuales</strong> y con la fecha escrita encima. Un congelador normal de nevera da para unas dos tandas grandes a la vez.</p></div>
+<h2>Si te falta un alimento</h2>
+<p>Estas cantidades aportan <strong>la misma proteína</strong>, así que se pueden cambiar unas por otras sin descuadrar el día. Lo que sí cambian son las calorías: la columna de la derecha te dice cuánto sube o baja.</p>
+<div class="tabla-caja"><table><thead><tr><th>En lugar de 100 g de pollo…</th><th style="text-align:right">Pon esta cantidad</th><th style="text-align:right">Diferencia de calorías</th></tr></thead><tbody>
+<tr><td>Pechuga de pollo</td><td class="num">100 g</td><td class="num ">0 kcal</td></tr>
+<tr><td>Pechuga de pavo</td><td class="num">96 g</td><td class="num ">-3 kcal</td></tr>
+<tr><td>Ternera picada 3 %</td><td class="num">107 g</td><td class="num ">+13 kcal</td></tr>
+<tr><td>Atún al natural escurrido</td><td class="num">89 g</td><td class="num ">-10 kcal</td></tr>
+<tr><td>Claras de huevo</td><td class="num">212 g</td><td class="num ">-16 kcal</td></tr>
+<tr><td>Huevo entero</td><td class="num">183 g</td><td class="num ojo">+149 kcal</td></tr>
+<tr><td>Salmón</td><td class="num">113 g</td><td class="num ojo">+123 kcal</td></tr>
+<tr><td>Bacalao o merluza</td><td class="num">128 g</td><td class="num ">-8 kcal</td></tr>
+<tr><td>Skyr o queso batido 0 %</td><td class="num">210 g</td><td class="num ">+19 kcal</td></tr>
+<tr><td>Yogur griego 0 %</td><td class="num">231 g</td><td class="num ">+26 kcal</td></tr>
+<tr><td>Proteína en polvo</td><td class="num">31 g</td><td class="num ">+1 kcal</td></tr>
+</tbody></table></div>
+<div class="aviso"><span class="et">Cómo leer esta tabla</span><p>Todas esas cantidades dan <strong>23 gramos de proteína</strong>, igual que 100 g de pollo.</p><p>El <strong>atún</strong> y las <strong>claras</strong> salen incluso más baratos en calorías que el pollo. El <strong>salmón</strong> y el <strong>huevo entero</strong> cuestan bastante más: si los usas como sustituto, quita algo de patata para compensar.</p></div>
 <h2>Qué significa cada palabra</h2>
 <div class="rejilla">
 <article class="tarjeta"><h3>Aceite de oliva virgen extra</h3><p style="margin:0">El aceite de oliva de mejor calidad, obtenido solo por medios mecánicos. En muchas recetas y etiquetas aparece abreviado como AOVE; aquí lo escribimos siempre entero.</p></article>
