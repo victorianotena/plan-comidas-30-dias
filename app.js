@@ -2,6 +2,17 @@
 (function () {
   'use strict';
 
+  // ---- la cabecera pegajosa cambia de alto: hay que medirla ----
+  var cab = document.querySelector('.cab');
+  if (cab) {
+    var medirCab = function () {
+      document.documentElement.style.setProperty('--alto-cab', (cab.offsetHeight + 18) + 'px');
+    };
+    medirCab();
+    window.addEventListener('resize', medirCab);
+    window.addEventListener('orientationchange', medirCab);
+  }
+
   // ---- menu plegable en movil ----
   var btn = document.getElementById('btnMenu');
   var menu = document.getElementById('menuPrincipal');
@@ -183,7 +194,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=37d34610').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=89547a96').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -206,15 +217,21 @@
     var p = iso.split('-');
     return p[2] + '/' + p[1] + '/' + p[0].slice(2);
   };
+  // En espaniol el decimal se escribe con coma
+  var kg = function (n) { return n.toFixed(1).replace('.', ',') + ' kg'; };
 
   var grafica = function () {
     var svg = document.getElementById('grafica');
+    // El SVG se dibuja en pixeles REALES. Con un viewBox fijo de 600, en el movil
+    // se escalaba a la mitad y los numeros del eje salian a 6,6 px, ilegibles.
+    var W = Math.max(300, Math.round(svg.clientWidth || 600)), H = 260;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     if (datos.length < 2) {
       svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="currentColor" ' +
-        'font-size="17">Apunta al menos dos pesos para ver la gráfica</text>';
+        'font-size="18">Apunta al menos dos pesos para ver la gráfica</text>';
       return;
     }
-    var W = 600, H = 260, mx = 46, my = 26;
+    var mx = 54, my = 26;
     var pesos = datos.map(function (d) { return d.p; });
     var min = Math.min.apply(null, pesos) - 1, max = Math.max.apply(null, pesos) + 1;
     var t0 = new Date(datos[0].f).getTime();
@@ -228,8 +245,8 @@
       var v = min + (max - min) * i / 4, y = Y(v);
       s += '<line x1="' + mx + '" y1="' + y + '" x2="' + (W - my) + '" y2="' + y +
            '" stroke="currentColor" stroke-opacity=".15"/>' +
-           '<text x="' + (mx - 8) + '" y="' + (y + 5) + '" text-anchor="end" font-size="13" ' +
-           'fill="currentColor" fill-opacity=".65">' + v.toFixed(1) + '</text>';
+           '<text x="' + (mx - 8) + '" y="' + (y + 6) + '" text-anchor="end" font-size="16" ' +
+           'fill="currentColor" fill-opacity=".75">' + v.toFixed(1).replace('.', ',') + '</text>';
     }
     // linea prevista: -1 kg por semana desde el primer peso
     var prev0 = datos[0].p, prevFin = prev0 - (dias / 7) * 1;
@@ -260,10 +277,10 @@
     else if (sem >= -1.1) { juicio = 'Vas al ritmo previsto.'; clase = ''; }
     else { juicio = 'Estás perdiendo más rápido de lo previsto. Conviene subir las calorías y comentarlo con tu médico.'; clase = 'atencion'; }
     caja.innerHTML =
-      '<dl class="datos"><div><dt>Peso inicial</dt><dd>' + a.p.toFixed(1) + ' kg</dd></div>' +
-      '<div><dt>Peso actual</dt><dd>' + b.p.toFixed(1) + ' kg</dd></div>' +
-      '<div><dt>Diferencia</dt><dd>' + (dif > 0 ? '+' : '') + dif.toFixed(1) + ' kg</dd></div>' +
-      '<div><dt>Por semana</dt><dd>' + sem.toFixed(2) + ' kg</dd></div>' +
+      '<dl class="datos"><div><dt>Peso inicial</dt><dd>' + kg(a.p) + '</dd></div>' +
+      '<div><dt>Peso actual</dt><dd>' + kg(b.p) + '</dd></div>' +
+      '<div><dt>Diferencia</dt><dd>' + (dif > 0 ? '+' : '') + kg(dif) + '</dd></div>' +
+      '<div><dt>Por semana</dt><dd>' + sem.toFixed(2).replace('.', ',') + ' kg</dd></div>' +
       '<div><dt>Días registrados</dt><dd>' + Math.round(dias) + '</dd></div></dl>' +
       '<div class="aviso ' + clase + '"><span class="et">Cómo va</span><p>' + juicio + '</p>' +
       '<p>El plan prevé perder alrededor de <strong>1 kg por semana</strong>. ' +
@@ -273,7 +290,7 @@
   var tabla = function () {
     var tb = document.querySelector('#tablaPeso tbody');
     tb.innerHTML = datos.map(function (d, i) {
-      return '<tr><td>' + fmt(d.f) + '</td><td class="num">' + d.p.toFixed(1) + ' kg</td>' +
+      return '<tr><td>' + fmt(d.f) + '</td><td class="num">' + kg(d.p) + '</td>' +
              '<td><button type="button" class="btn-borrar" data-i="' + i + '">Borrar</button></td></tr>';
     }).join('') || '<tr><td colspan="3">Todavía no hay ningún peso apuntado.</td></tr>';
     tb.querySelectorAll('.btn-borrar').forEach(function (b) {
@@ -287,13 +304,25 @@
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
+    var campo = document.getElementById('valorPeso');
     var f = document.getElementById('fechaPeso').value;
-    var p = parseFloat(document.getElementById('valorPeso').value);
-    if (!f || !(p > 20 && p < 400)) return;
+    // Aqui se escribe con COMA. Un input type=number la rechaza y deja el campo
+    // vacio sin decir nada, asi que es de texto y se convierte a mano.
+    var p = parseFloat(String(campo.value).replace(',', '.'));
+    campo.setCustomValidity('');
+    if (!f) { document.getElementById('fechaPeso').reportValidity(); return; }
+    if (!(p > 20 && p < 400)) {
+      campo.setCustomValidity('Escribe un peso entre 20 y 400 kilos. Por ejemplo 98,4');
+      campo.reportValidity();
+      return;
+    }
     datos = datos.filter(function (d) { return d.f !== f; });
     datos.push({ f: f, p: p });
     guardar(); todo();
-    document.getElementById('valorPeso').value = '';
+    campo.value = '';
+  });
+  document.getElementById('valorPeso').addEventListener('input', function () {
+    this.setCustomValidity('');
   });
 
   document.getElementById('borrarTodo').addEventListener('click', function () {

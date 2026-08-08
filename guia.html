@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="Cómo pesar los alimentos, cuánto aguantan y qué significa cada palabra.">
-<meta name="theme-color" content="#5E2740">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#5E2740">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1211">
 <title>Guía · Plan de comidas</title>
-<link rel="stylesheet" href="estilo.css?v=37d34610">
-<link rel="manifest" href="manifest.json?v=37d34610">
+<link rel="stylesheet" href="estilo.css?v=89547a96">
+<link rel="manifest" href="manifest.json?v=89547a96">
 <link rel="icon" href="favicon.png" sizes="64x64">
 <link rel="apple-touch-icon" href="icono-apple.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -31,8 +32,9 @@
 </header>
 <main id="principal" class="contenido">
 <h1>Guía</h1>
-<p class="entrada">Cómo pesar los alimentos, cuánto aguanta cada preparación y qué significan las palabras que aparecen en las recetas.</p>
-<h2>Cómo se pesa cada cosa</h2>
+<p class="entrada">Cómo pesar los alimentos, cuánto aguanta cada preparación, para qué sirve lo que sobra y qué significan las palabras que aparecen en las recetas.</p>
+<nav class="indice-recetas" aria-label="Índice"><p class="etiqueta" style="margin-top:0">Ir directamente a</p><ul class="chips"><li><a href="#pesar">Cómo se pesa</a></li><li><a href="#aguanta">Cuánto aguanta cada cosa</a></li><li><a href="#emergencia">La comida de emergencia</a></li><li><a href="#sustituir">Si te falta un alimento</a></li><li><a href="#palabras">Qué significa cada palabra</a></li></ul></nav>
+<h2 id="pesar">Cómo se pesa cada cosa</h2>
 <p>Esta regla se aplica a todo el plan sin excepción. Si se pesa de otra forma, las cantidades dejan de cuadrar.</p>
 <div class="tabla-caja"><table><thead><tr><th>Alimento</th><th>Cómo se pesa</th><th>Por qué</th></tr></thead><tbody>
 <tr><td><strong>Carne y pescado</strong></td><td>Crudo, antes de cocinar</td><td>Al cocinarse pierden entre un 25 y un 30 % de su peso en agua</td></tr>
@@ -42,7 +44,7 @@
 <tr><td><strong>Claras de huevo</strong></td><td>Los gramos que marca el envase</td><td>Vienen líquidas y ya pesadas</td></tr>
 <tr><td><strong>Atún de lata</strong></td><td>Escurrido, sin el líquido</td><td>Una lata de 80 g deja unos 52 g escurridos</td></tr>
 </tbody></table></div>
-<h2>Cuánto aguanta cada preparación</h2>
+<h2 id="aguanta">Cuánto aguanta cada preparación</h2>
 <div class="tabla-caja"><table><thead><tr><th>Receta</th><th>En la nevera</th><th>¿Se congela?</th></tr></thead><tbody>
 <tr><td>Taquitos buffalo de pollo</td><td>4 días en nevera, en recipiente hermético.</td><td class="ok">Sí. Congela crudos ya enrollados, separados con papel de horno.</td></tr>
 <tr><td>Lasaña alta en proteína</td><td>4 días en nevera.</td><td class="ok">Sí, por raciones ya cortadas.</td></tr>
@@ -55,17 +57,23 @@
 <tr><td>Big Mac de pollo</td><td>3 días en nevera, hamburguesa y pan por separado.</td><td class="ok">Sí, las hamburguesas ya empanadas y crudas.</td></tr>
 <tr><td>Sándwich de pollo crujiente</td><td>3 días en nevera.</td><td class="ok">Sí, el pollo ya empanado y crudo.</td></tr>
 <tr><td>Carbonara proteica</td><td>2 días en nevera.</td><td class="ojo">No: la salsa de huevo no aguanta la congelación.</td></tr>
-<tr><td>Tarta de queso Biscoff (sin topping)</td><td>5 días en nevera.</td><td class="ok">Sí, por porciones.</td></tr>
+<tr><td>Tarta de queso Biscoff (sin topping)</td><td>5 días en nevera.</td><td class="ok">Sí, por porciones ya cortadas y envueltas.</td></tr>
 <tr><td>Tarta de queso de arándanos</td><td>5 días en nevera.</td><td class="ok">Sí, por porciones.</td></tr>
-<tr><td>Mousse proteica de cacao</td><td>4 días en nevera.</td><td class="ojo">No hace falta.</td></tr>
-<tr><td>Mousse de Biscoff proteica</td><td>4 días en nevera.</td><td class="ojo">No hace falta.</td></tr>
+<tr><td>Mousse proteica de cacao</td><td>4 días en nevera.</td><td class="ojo">Se puede, pero no hace falta: aguanta 4 días en la nevera.</td></tr>
+<tr><td>Mousse de Biscoff proteica</td><td>4 días en nevera.</td><td class="ojo">Se puede, pero no hace falta: aguanta 4 días en la nevera.</td></tr>
 <tr><td>Helado proteico de frutos rojos</td><td>Se toma en el momento.</td><td class="ok">Sí, pero saca 10 min antes para poder servirlo.</td></tr>
-<tr><td>Natillas proteicas de chocolate</td><td>4 días en nevera.</td><td class="ojo">No recomendable.</td></tr>
+<tr><td>Natillas proteicas de chocolate</td><td>4 días en nevera.</td><td class="ojo">No: al descongelar se corta y queda con grumos.</td></tr>
 <tr><td>Flatbread de cottage</td><td>3 días en nevera.</td><td class="ojo">No.</td></tr>
 <tr><td>Boronía</td><td>5 días en nevera.</td><td class="ok">Sí, congela muy bien por raciones.</td></tr>
 </tbody></table></div>
+<h2 id="emergencia">La comida de emergencia del congelador</h2>
+<p>Verás que en varios días de cocina <strong>sobran raciones</strong>. No es un error de cálculo ni hay que comérselas de más: <strong>es a propósito</strong>.</p>
+<p>Las recetas salen por hornadas cerradas. Si una da 4 raciones y esos días necesitas 3, la cuarta sobra. En lugar de recortar la receta y complicar las cantidades, esa ración va al congelador.</p>
+<div class="aviso"><span class="et">Para qué sirve lo que sobra</span><p>A lo largo del mes se acumulan <strong>27 raciones</strong> en el congelador. Ese es tu colchón para los días que el plan no contempla:</p><ul class="lista" style="margin-top:10px"><li><span>Llegas tarde y no da tiempo a cocinar</span></li><li><span>Estás malo o no te apetece ponerte</span></li><li><span>Se te ha estropeado algo de la nevera</span></li><li><span>Te has saltado un día y quieres retomar sin ir a la compra</span></li></ul><p style="margin-top:14px">Sin ese colchón, un día raro te obliga a pedir comida a domicilio o a saltarte el plan. <strong>Con él, sacas algo del congelador y sigues igual.</strong></p></div>
+<div class="aviso"><span class="et">Cómo guardarlo para que sirva</span><p><strong>Por raciones individuales</strong>, nunca todo junto en un tupper grande: si está todo pegado no puedes sacar una sola comida.</p><p><strong>Con la fecha y el nombre escritos encima</strong>, con cinta de carrocero o rotulador. A los dos meses no se distingue un burrito de una lasaña.</p><p><strong>Lo más antiguo delante.</strong> Aguanta bien entre uno y dos meses.</p></div>
+<h2>Qué se congela y qué no</h2>
 <div class="aviso"><span class="et">Regla general del congelador</span><p>Lo que lleva <strong>salsa de yogur o de huevo</strong> (la carbonara, la pasta chipotle, las natillas) no congela bien: se corta al descongelar. Todo lo demás aguanta perfectamente entre uno y dos meses.</p><p>Congela siempre en <strong>raciones individuales</strong> y con la fecha escrita encima. Un congelador normal de nevera da para unas dos tandas grandes a la vez.</p></div>
-<h2>Si te falta un alimento</h2>
+<h2 id="sustituir">Si te falta un alimento</h2>
 <p>Estas cantidades aportan <strong>la misma proteína</strong>, así que se pueden cambiar unas por otras sin descuadrar el día. Lo que sí cambian son las calorías: la columna de la derecha te dice cuánto sube o baja.</p>
 <div class="tabla-caja"><table><thead><tr><th>En lugar de 100 g de pollo…</th><th style="text-align:right">Pon esta cantidad</th><th style="text-align:right">Diferencia de calorías</th></tr></thead><tbody>
 <tr><td>Pechuga de pollo</td><td class="num">100 g</td><td class="num ">0 kcal</td></tr>
@@ -81,11 +89,11 @@
 <tr><td>Proteína en polvo</td><td class="num">31 g</td><td class="num ">+1 kcal</td></tr>
 </tbody></table></div>
 <div class="aviso"><span class="et">Cómo leer esta tabla</span><p>Todas esas cantidades dan <strong>23 gramos de proteína</strong>, igual que 100 g de pollo.</p><p>El <strong>atún</strong> y las <strong>claras</strong> salen incluso más baratos en calorías que el pollo. El <strong>salmón</strong> y el <strong>huevo entero</strong> cuestan bastante más: si los usas como sustituto, quita algo de patata para compensar.</p></div>
-<h2>Qué significa cada palabra</h2>
+<h2 id="palabras">Qué significa cada palabra</h2>
 <div class="rejilla">
 <article class="tarjeta"><h3>Aceite de oliva virgen extra</h3><p style="margin:0">El aceite de oliva de mejor calidad, obtenido solo por medios mecánicos. En muchas recetas y etiquetas aparece abreviado como AOVE; aquí lo escribimos siempre entero.</p></article>
 <article class="tarjeta"><h3>Whey / proteína en polvo</h3><p style="margin:0">Proteína de suero de leche en polvo. En este plan va siempre disuelta dentro de los postres, nunca como batido suelto.</p></article>
-<article class="tarjeta"><h3>Meal prep / cocinar en tanda</h3><p style="margin:0">Cocinar de una vez la comida de varios días y guardarla en raciones. Es la base de este plan: se cocina 5 o 6 veces al mes, no a diario.</p></article>
+<article class="tarjeta"><h3>Meal prep / cocinar en tanda</h3><p style="margin:0">Cocinar de una vez la comida de varios días y guardarla en raciones. Es la base de este plan: se cocina en tanda unos pocos días al mes y el resto solo hay que montar el plato.</p></article>
 <article class="tarjeta"><h3>Peso en crudo</h3><p style="margin:0">El alimento se pesa antes de cocinarlo. La carne pierde en torno a un 25-30 % de su peso al cocinarse, así que pesarla después daría cantidades muy distintas.</p></article>
 <article class="tarjeta"><h3>Peso en seco</h3><p style="margin:0">La pasta y el arroz se pesan sin cocer. Al cocerse absorben agua y multiplican su peso por dos o por tres.</p></article>
 <article class="tarjeta"><h3>Peso escurrido</h3><p style="margin:0">En las conservas, el peso del alimento sin el líquido. Una lata de atún de 80 g suele dar unos 52 g escurridos.</p></article>
@@ -104,6 +112,6 @@
   ingrediente a ingrediente.</p>
 </footer>
 <button type="button" class="arriba" id="btnArriba" aria-label="Volver arriba">&#8593;</button>
-<script src="app.js?v=37d34610"></script>
+<script src="app.js?v=89547a96"></script>
 </body>
 </html>
