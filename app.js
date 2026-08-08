@@ -126,13 +126,22 @@
     });
   });
 
+  // Cada boton desmarca SOLO su lista. Antes borraba las dos quincenas de golpe y
+  // sin avisar: con media compra marcada en el super, se perdia entera.
   document.querySelectorAll('.btn-reset').forEach(function (b) {
     b.addEventListener('click', function () {
-      document.querySelectorAll('tr.marcable.hecho').forEach(function (f) {
+      var lid = b.getAttribute('data-lista');
+      var filas = document.querySelectorAll(
+        lid ? 'table[data-lista="' + lid + '"] tr.marcable.hecho' : 'tr.marcable.hecho');
+      if (!filas.length) return;
+      if (!window.confirm('Se van a desmarcar ' + filas.length +
+          (filas.length === 1 ? ' producto de esta lista.' : ' productos de esta lista.') +
+          ' ¿Seguro?')) return;
+      filas.forEach(function (f) {
         f.classList.remove('hecho');
         f.setAttribute('aria-pressed', 'false');
+        delete marcados[f.getAttribute('data-id')];
       });
-      marcados = {};
       guardar();
       actualizarContador();
     });
@@ -194,7 +203,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=99352cab').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=36911f9a').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
