@@ -160,6 +160,34 @@
   if (!(dia >= 1 && dia <= 30)) dia = 1;
   var datos = null;
 
+  var extra = function (d) {
+    var h = '';
+    if (d.sacar) {
+      h += '<div class="aviso atencion" style="margin:18px 0 0">' +
+           '<span class="et">Antes de acostarte</span><p>' + d.sacar + '</p></div>';
+    }
+    if (d.cocina && d.cocina.length) {
+      h += '<details class="tarjeta" style="margin:18px 0 0"><summary>' +
+           '<strong>Todo lo que necesitas hoy para cocinar</strong> (' +
+           d.cocina.length + ' ingredientes)</summary><ul class="lista">';
+      d.cocina.forEach(function (x) {
+        h += '<li><span>' + x.nombre + '</span><span class="cant">' + x.gramos + '</span></li>';
+      });
+      h += '</ul></details>';
+    }
+    if (d.quedan && d.quedan.length) {
+      h += '<details class="tarjeta" style="margin:18px 0 0"><summary>' +
+           '<strong>Lo que va quedando en casa</strong></summary><ul class="lista">';
+      d.quedan.forEach(function (x) {
+        h += '<li><span>' + x.nombre + '</span><span class="cant">' + x.queda +
+             ' · ' + x.pct + ' %</span></li>';
+      });
+      h += '</ul><p style="margin:12px 0 0">Solo se listan los cinco que más bajos van. ' +
+           'No hay compra hasta el día 16.</p></details>';
+    }
+    return h;
+  };
+
   var pintar = function () {
     if (!datos) return;
     var d = datos[String(dia)];
@@ -187,7 +215,7 @@
       });
       h += '</ul>';
     }
-    document.getElementById('hoyCuerpo').innerHTML = h;
+    document.getElementById('hoyCuerpo').innerHTML = h + extra(d);
     document.getElementById('diaMenos').disabled = (dia === 1);
     document.getElementById('diaMas').disabled = (dia === 30);
     localStorage.setItem(CLAVE, String(dia));
@@ -203,7 +231,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=977b0c9c').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=3a033c3a').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
