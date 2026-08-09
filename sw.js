@@ -1,7 +1,7 @@
 
 // Servicio que guarda la web en el movil para que funcione sin cobertura.
-var VERSION = 'plan-52eef25c';
-var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "coste.html", "nutrientes.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=52eef25c", "app.js?v=52eef25c", "plan.json?v=52eef25c", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
+var VERSION = 'plan-36e74dac';
+var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "coste.html", "nutrientes.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=36e74dac", "app.js?v=36e74dac", "plan.json?v=36e74dac", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) {
