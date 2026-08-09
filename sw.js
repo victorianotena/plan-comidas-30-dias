@@ -1,7 +1,7 @@
 
 // Servicio que guarda la web en el movil para que funcione sin cobertura.
-var VERSION = 'plan-047a905a';
-var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "coste.html", "nutrientes.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=047a905a", "app.js?v=047a905a", "plan.json?v=047a905a", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
+var VERSION = 'plan-817518fd';
+var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "coste.html", "nutrientes.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=817518fd", "app.js?v=817518fd", "plan.json?v=817518fd", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) {
@@ -31,6 +31,9 @@ self.addEventListener('activate', function (e) {
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
   if (new URL(e.request.url).origin !== location.origin) return;
+  // El video pesa 15 MB: se sirve de la red y no se guarda, o se come la cache
+  // que el movil reserva para la app entera.
+  if (/\.(mp4|webm|mov)$/i.test(new URL(e.request.url).pathname)) return;
   e.respondWith(
     fetch(e.request).then(function (r) {
       var copia = r.clone();
