@@ -231,7 +231,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=fec8a0d1').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=4f66e09a').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -373,6 +373,126 @@
     hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') +
     '-' + String(hoy.getDate()).padStart(2, '0');
   todo();
+})();
+
+// ============================================================ COPIA DE SEGURIDAD
+// Lo que marcas, el dia por el que vas y los pesos se guardan en el navegador,
+// y el navegador los guarda POR DIRECCION. Si la pagina cambia de direccion, el
+// movil los da por datos de otra web distinta y no los encuentra: no se borran,
+// se quedan huerfanos en la direccion vieja. Por eso hay que poder sacarlos a un
+// fichero y volver a meterlos. Sin esto, mudar el sitio pierde el progreso.
+(function () {
+  'use strict';
+  var bGuardar = document.getElementById('guardarCopia');
+  if (!bGuardar) return;
+  var fichero = document.getElementById('ficheroCopia');
+  var aviso = document.getElementById('avisoCopia');
+  document.getElementById('restaurarCopia').addEventListener('click', function () {
+    // Se limpia antes de abrir: si eliges DOS VECES el mismo fichero, el
+    // navegador no dispara 'change' la segunda y parece que el boton no va.
+    fichero.value = '';
+    fichero.click();
+  });
+
+  // Las tres claves con datos suyos. 'sw-ultima-comprobacion' no entra: es un
+  // apunte interno del service worker y restaurarlo solo retrasaria una
+  // comprobacion de version.
+  var CLAVES = ['compra-marcados', 'plan-dia-actual', 'registro-peso'];
+
+  var decir = function (txt, mal) {
+    aviso.textContent = txt;
+    aviso.className = 'aviso' + (mal ? ' atencion' : '');
+    aviso.hidden = false;
+  };
+
+  var dosCifras = function (n) { return String(n).padStart(2, '0'); };
+
+  bGuardar.addEventListener('click', function () {
+    var datos = {}, n = 0;
+    CLAVES.forEach(function (k) {
+      var v = localStorage.getItem(k);
+      if (v !== null) { datos[k] = v; n++; }
+    });
+    if (!n) { decir('Todavía no hay nada que guardar: no has marcado nada ni apuntado ningún peso.', true); return; }
+    var h = new Date();
+    var fecha = h.getFullYear() + '-' + dosCifras(h.getMonth() + 1) + '-' + dosCifras(h.getDate());
+    var blob = new Blob([JSON.stringify({ version: 1, fecha: h.toISOString(), datos: datos }, null, 1)],
+                        { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'plan-comidas-copia-' + fecha + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // Sin esperar, Safari cancela la descarga al liberar el enlace.
+    setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+    decir('Copia guardada en tus descargas: plan-comidas-copia-' + fecha + '.json. '
+        + 'Guárdala donde no se te pierda.');
+  });
+
+  fichero.addEventListener('change', function () {
+    var f = this.files && this.files[0];
+    if (!f) return;
+    var lector = new FileReader();
+    lector.onload = function () {
+      var c;
+      try { c = JSON.parse(lector.result); }
+      catch (e) { decir('Ese fichero no es una copia de esta página. Busca uno que se llame plan-comidas-copia-…json', true); return; }
+      if (!c || typeof c !== 'object' || !c.datos || typeof c.datos !== 'object') {
+        decir('Ese fichero no es una copia de esta página. Busca uno que se llame plan-comidas-copia-…json', true); return;
+      }
+      // Solo se aceptan las tres claves conocidas y solo si su contenido tiene
+      // la forma que espera el resto de la pagina. Meter cualquier cosa que
+      // venga en el fichero dejaria la pagina rota y sin saber por que.
+      // Se cuenta pieza a pieza y se dice cual entro y cual no. Decir
+      // "Restaurado" a secas cuando solo ha vuelto una de las tres es el peor
+      // fallo posible aqui: se da por recuperado lo que en realidad se ha perdido.
+      var NOMBRE = { 'compra-marcados': 'lo marcado en la compra',
+                     'plan-dia-actual': 'el día por el que vas',
+                     'registro-peso': 'los pesos apuntados' };
+      var entran = [], fuera = [];
+      CLAVES.forEach(function (k) {
+        var v = c.datos[k];
+        if (typeof v !== 'string') { if (k in c.datos) fuera.push(NOMBRE[k]); return; }
+        var d;
+        try { d = JSON.parse(v); } catch (e) { d = null; }
+        var vale;
+        if (k === 'plan-dia-actual') {
+          var n = parseInt(v, 10);
+          vale = (n >= 1 && n <= 30);
+        } else if (k === 'compra-marcados') {
+          vale = Array.isArray(d) && !d.some(function (x) { return typeof x !== 'string'; });
+        } else {
+          vale = Array.isArray(d) && !d.some(function (x) {
+            return !x || typeof x.f !== 'string' || typeof x.p !== 'number';
+          });
+        }
+        if (!vale) { fuera.push(NOMBRE[k]); return; }
+        try { localStorage.setItem(k, v); entran.push(NOMBRE[k]); }
+        catch (e) { fuera.push(NOMBRE[k]); }
+      });
+
+      var lista = function (a) {
+        return a.length < 2 ? a[0] : a.slice(0, -1).join(', ') + ' y ' + a[a.length - 1];
+      };
+      if (!entran.length) {
+        decir('Esa copia no traía nada aprovechable. No se ha tocado nada de lo que ya tenías.', true);
+        return;
+      }
+      if (fuera.length) {
+        // Aviso en rojo aunque algo haya entrado: lo que falta se ha perdido y
+        // hay que enterarse ahora, no dentro de dos semanas.
+        decir('Ha vuelto ' + lista(entran) + ', pero ' + lista(fuera) + ' no: esa parte de la '
+            + 'copia estaba estropeada. Se recarga la página en un momento…', true);
+      } else {
+        decir('Restaurado ' + lista(entran) + '. La página se recarga sola en un momento…');
+      }
+      setTimeout(function () { location.reload(); }, fuera.length ? 4000 : 1200);
+    };
+    lector.onerror = function () { decir('No se ha podido leer el fichero.', true); };
+    lector.readAsText(f);
+  });
 })();
 
 // ============================================================ APP INSTALABLE

@@ -8,8 +8,8 @@
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#5E2740">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1211">
 <title>Mi progreso · Plan de comidas</title>
-<link rel="stylesheet" href="estilo.css?v=fec8a0d1">
-<link rel="manifest" href="manifest.json?v=fec8a0d1">
+<link rel="stylesheet" href="estilo.css?v=4f66e09a">
+<link rel="manifest" href="manifest.json?v=4f66e09a">
 <link rel="icon" href="favicon.png" sizes="64x64">
 <link rel="apple-touch-icon" href="icono-apple.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -42,6 +42,11 @@
 <h2>Todos los pesos apuntados</h2>
 <div class="tabla-caja"><table id="tablaPeso"><thead><tr><th>Fecha</th><th style="text-align:right">Peso</th><th>&nbsp;</th></tr></thead><tbody></tbody></table></div>
 <button type="button" class="btn-reset" id="borrarTodo">Borrar todo el historial</button>
+<h2>Copia de seguridad</h2>
+<p>Lo que marcas en la compra, el día por el que vas y todos los pesos <strong>viven solo en este móvil</strong>. Si cambias de teléfono, borras los datos del navegador o la página se muda a otra dirección, se quedan atrás. Con estos dos botones te los llevas.</p>
+<div class="tarjeta" style="padding:14px;display:flex;flex-wrap:wrap;gap:12px"><button type="button" class="enlace-video" id="guardarCopia" style="border:none;cursor:pointer">Guardar una copia</button><button type="button" class="enlace-video" id="restaurarCopia" style="border:none;cursor:pointer">Restaurar una copia</button><input type="file" id="ficheroCopia" accept="application/json,.json" tabindex="-1" aria-hidden="true" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></div>
+<div class="aviso" id="avisoCopia" role="status" aria-live="polite" hidden></div>
+<p style="font-size:16px;color:var(--suave)">Al guardar, se descarga un fichero llamado <code>plan-comidas-copia-…json</code>. Ese fichero no se sube a ningún sitio: se queda en tus descargas. Para volver a meterlo, pulsa <strong>Restaurar una copia</strong> y elígelo.</p>
 <div class="aviso atencion"><span class="et">Una advertencia importante</span><p>Esta página <strong>no sustituye a un médico ni a un dietista</strong>. Si pierdes peso muy rápido, te notas sin fuerza, duermes mal o algo no va bien, para y consúltalo. El peso en la báscula tampoco lo dice todo: también cuenta cómo te encuentras y si mantienes la fuerza en los entrenamientos.</p></div>
 </main>
 <footer class="pie contenido">
@@ -53,6 +58,6 @@
   ingrediente a ingrediente.</p>
 </footer>
 <button type="button" class="arriba" id="btnArriba" aria-label="Volver arriba">&#8593;</button>
-<script src="app.js?v=fec8a0d1"></script>
+<script src="app.js?v=4f66e09a"></script>
 </body>
 </html>
