@@ -151,6 +151,38 @@ tr:last-child td{ border-bottom:none }
 .enlace-video:hover{ filter:brightness(1.12) }
 .enlace-video:focus-visible{ outline:3px solid var(--tinta); outline-offset:3px }
 
+
+/* ---------- escaner de la compra ----------
+   Se usa con una mano, en un pasillo y con prisa: todo grande y de un vistazo. */
+.escaner-caja{ border:2px solid var(--linea); border-radius:14px; overflow:hidden;
+  background:#000; margin:18px 0 }
+#camara{ width:100%; display:block; max-height:52vh; object-fit:cover }
+.escaner-barra{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:16px 0 }
+#estadoEscaner{ margin:0; color:var(--suave); font-size:16px }
+.ver{ border-radius:14px; padding:18px; margin:18px 0; border:3px solid var(--linea) }
+.ver-cab{ display:flex; gap:14px; align-items:center; margin-bottom:10px }
+.ver-ico{ font-size:32px; line-height:1; font-weight:700; width:52px; height:52px;
+  border-radius:50%; display:grid; place-items:center; flex:0 0 auto; color:#fff }
+.ver-et{ margin:0; font-size:13px; letter-spacing:.1em; text-transform:uppercase; font-weight:700 }
+.ver-tit{ margin:2px 0 0; font-size:21px; font-weight:700; line-height:1.2 }
+.ver-txt{ margin:0 0 12px; font-size:17px }
+.ver-prod{ margin:0 0 10px; font-size:16px }
+.ver-hueco{ font-size:14px; color:var(--suave); border:1px solid var(--linea);
+  border-radius:999px; padding:2px 9px; white-space:nowrap }
+.ver-tabla{ width:100%; border-collapse:collapse; font-size:15px; margin:10px 0 }
+.ver-tabla th,.ver-tabla td{ padding:5px 4px; text-align:right; border-bottom:1px solid var(--linea) }
+.ver-tabla th:first-child,.ver-tabla td:first-child{ text-align:left }
+.ver-aviso{ font-size:16px; padding:11px 13px; border-radius:9px; margin:10px 0;
+  border:1px solid var(--linea) }
+.ver-alt{ margin:12px 0 0; font-size:16px }
+.ver-cod{ margin:10px 0 0; font-size:14px; color:var(--suave) }
+.ver-si{ border-color:#2E7D4F } .ver-si .ver-ico{ background:#2E7D4F } .ver-si .ver-et{ color:#2E7D4F }
+.ver-no{ border-color:#B3261E } .ver-no .ver-ico{ background:#B3261E } .ver-no .ver-et{ color:#B3261E }
+.ver-igual .ver-ico{ background:#5C635E }
+.ver-mirar{ border-color:#8A5200 } .ver-mirar .ver-ico{ background:#8A5200 }
+.ver-mirar .ver-et{ color:#8A5200 }
+.form-escaner{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px }
+
 .pie{ margin-top:64px; padding:26px 20px 60px; border-top:2px solid var(--linea);
   color:var(--suave); font-size:16px; }
 .pie p{ max-width:70ch }

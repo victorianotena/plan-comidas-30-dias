@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Apunta al código de barras en el súper y te digo si ese producto encaja en tu plan.">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#5E2740">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1211">
+<title>Escanear · Plan de comidas</title>
+<link rel="stylesheet" href="estilo.css?v=d3384ab1">
+<link rel="manifest" href="manifest.json?v=d3384ab1">
+<link rel="icon" href="favicon.png" sizes="64x64">
+<link rel="apple-touch-icon" href="icono-apple.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Plan de comidas">
+</head>
+<body>
+<a class="saltar" href="#principal">Saltar al contenido</a>
+<header class="cab">
+  <div class="contenido">
+    <div class="barra">
+      <p class="marca"><a href="index.html">Plan de comidas · 30 días</a></p>
+      <button type="button" class="btn-menu" id="btnMenu" aria-expanded="false" aria-controls="menuPrincipal">
+        <span class="rayas" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="btn-menu-txt">Menú</span>
+      </button>
+    </div>
+    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="escanear.html" aria-current="page" class="actual">Escanear</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html">Nutrientes</a><a href="progreso.html">Mi progreso</a><a href="imprevistos.html">Imprevistos</a><a href="guia.html">Guía</a></nav>
+  </div>
+</header>
+<main id="principal" class="contenido">
+<h1>¿Me sirve esto?</h1>
+<p class="entrada">Apunta con la cámara al código de barras y te digo si encaja en tu plan. <strong>No hace falta tocar nada</strong>: lee sola, vibra y te lo dice. Apuntas al siguiente y ya.</p>
+<div id="escaner">
+<p id="escanerCargando" class="entrada">Cargando los datos del plan…</p>
+<div class="escaner-barra"><button type="button" class="enlace-video" id="btnCamara" disabled style="border:none;cursor:pointer">Encender la cámara</button><p id="estadoEscaner" role="status" aria-live="polite"></p></div>
+<div class="escaner-caja"><video id="camara" playsinline muted hidden></video></div>
+<div id="veredicto" role="status" aria-live="polite" hidden></div>
+<h2>Si no lo lee, o no está en la base</h2>
+<p>Pasa sobre todo con marcas blancas. Copia los números de la tabla del envase —los de <strong>por 100 gramos</strong>, no los de la ración— y te lo digo igual.</p>
+<form id="formManual" class="tarjeta">
+<div class="form-escaner"><div class="campo"><label for="mNombre">Qué es</label><input type="text" id="mNombre" placeholder="Yogur griego natural"></div><div class="campo"><label for="mCodigo">Código (si lo ves)</label><input type="text" id="mCodigo" inputmode="numeric" placeholder="8410000000000"></div><div class="campo"><label for="mKcal">Calorías</label><input type="text" id="mKcal" inputmode="decimal" placeholder="58" required></div><div class="campo"><label for="mProt">Proteínas</label><input type="text" id="mProt" inputmode="decimal" placeholder="6" required></div><div class="campo"><label for="mHc">Hidratos</label><input type="text" id="mHc" inputmode="decimal" placeholder="4"></div><div class="campo"><label for="mGrasa">Grasas</label><input type="text" id="mGrasa" inputmode="decimal" placeholder="2"></div><div class="campo"><label for="mFibra">Fibra</label><input type="text" id="mFibra" inputmode="decimal" placeholder="0"></div></div>
+<button type="submit" class="enlace-video" style="border:none;cursor:pointer;margin-top:14px">Dime si me sirve</button>
+</form>
+</div>
+<h2>Qué mira exactamente</h2>
+<p>No te dice si un producto es «sano» en abstracto: eso ya lo hacen otras apps. Te dice <strong>si encaja en estos treinta días</strong>, comparándolo con lo que ya compras para ese mismo hueco. Un atún se compara con tu atún, no con un ideal.</p>
+<div class="aviso"><span class="et">Las trampas que ya nos pillaron</span><p>Además busca los casos en los que <strong>el nombre no dice la verdad</strong>. Están sacados de tu propia compra:</p><ul><li>«Carne picada» con menos de 18&nbsp;g de proteína: es un preparado, como la Burger Meat.</li><li>«Yogur griego» con menos de 8&nbsp;g: el skyr te da más por el mismo dinero.</li><li>«Pasta vegetal» con menos de 20&nbsp;g: es trigo con verdura en polvo.</li><li>«Atún» con más de 5&nbsp;g de grasa: está en aceite, y escurrido son 265&nbsp;kcal.</li></ul></div>
+<div class="aviso atencion"><span class="et">De dónde salen los datos</span><p>Los del producto que escaneas vienen de <strong>Open Food Facts</strong>, una base abierta que rellena gente. <strong>Puede tener errores.</strong> Por eso siempre te enseño los números que ha encontrado: si no cuadran con el envase que tienes en la mano, escríbelos abajo y decide con los tuyos.</p><p>Los de <em>tu</em> plan no: esos salen de las etiquetas que fotografiaste.</p></div>
+<div class="aviso"><span class="et">Se acuerda de lo que escaneas</span><p>Lo que ya has mirado responde al instante y sin conexión. Y queda guardado, así que lo puedes exportar desde <a href="progreso.html#copia">Mi progreso</a> y convertirlo en fichas de producto de verdad.</p></div>
+</main>
+<footer class="pie contenido">
+  <p>Las cantidades salen de una hoja de cálculo que verifica cada día. Ningún día baja
+  de <strong>131 gramos de proteína</strong> ni se sale de
+  <strong>1.980 a 2.149 calorías</strong>.</p>
+  <p>Las recetas marcadas con enlace son de <a href="https://www.instagram.com/_aussiefitness/"
+  rel="noopener">Dez Cerimagic (@_aussiefitness)</a>. Las cantidades han sido recalculadas
+  ingrediente a ingrediente.</p>
+</footer>
+<button type="button" class="arriba" id="btnArriba" aria-label="Volver arriba">&#8593;</button>
+<script src="app.js?v=d3384ab1"></script>
+</body>
+</html>

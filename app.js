@@ -231,7 +231,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=6c439b63').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=d3384ab1').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -676,4 +676,386 @@ if ('serviceWorker' in navigator) {
     }
     caja.hidden = false;
   }, 1200);
+})();
+
+// ==================================================== ESCANER DE LA COMPRA
+(function () {
+  'use strict';
+  var vista = document.getElementById('escaner');
+  if (!vista) return;
+
+  var video = document.getElementById('camara');
+  var salida = document.getElementById('veredicto');
+  var estado = document.getElementById('estadoEscaner');
+  var btnCam = document.getElementById('btnCamara');
+  var manual = document.getElementById('formManual');
+  var CLAVE_CACHE = 'escaner-cache';     // codigo -> datos del producto
+  var CLAVE_HIST = 'escaner-historial';  // lo escaneado, para exportarlo luego
+
+  var D = null;                          // datos del plan (escaner.json)
+  var cache = {};
+  try { cache = JSON.parse(localStorage.getItem(CLAVE_CACHE) || '{}'); } catch (e) {}
+
+  var guardaCache = function () {
+    try { localStorage.setItem(CLAVE_CACHE, JSON.stringify(cache)); } catch (e) {}
+  };
+
+  var apunta = function (codigo, prod, ver) {
+    var h = [];
+    try { h = JSON.parse(localStorage.getItem(CLAVE_HIST) || '[]'); } catch (e) {}
+    h.push({ f: new Date().toISOString().slice(0, 10), cod: codigo,
+             nom: prod.nombre, marca: prod.marca || '',
+             kcal: prod.kcal, prot: prod.prot, hc: prod.hc,
+             grasa: prod.grasa, fibra: prod.fibra,
+             hueco: ver.hueco, veredicto: ver.clase });
+    // No crece sin limite: 300 productos son mas de un anio de compras.
+    if (h.length > 300) h = h.slice(-300);
+    try { localStorage.setItem(CLAVE_HIST, JSON.stringify(h)); } catch (e) {}
+  };
+
+  // ---------------------------------------------------------------- utiles
+  var num = function (x) {
+    var n = parseFloat(String(x).replace(',', '.'));
+    return isFinite(n) ? n : null;
+  };
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  };
+  var uno = function (x) { return (Math.round(x * 10) / 10).toString().replace('.', ','); };
+
+  // ------------------------------------------------------- en que hueco cae
+  // Mismas reglas que escaner.py, por macros y no por el nombre: el nombre es
+  // justo lo que miente.
+  // EL ORDEN IMPORTA, y es el mismo que en escaner.py. Mirando la proteina
+  // antes que los hidratos, una pasta de lentejas se clasificaba como fuente de
+  // proteina y se comparaba contra el pollo.
+  var huecoDe = function (p) {
+    if (!p.kcal || p.kcal <= 0) return 'otro';
+    if (p.prot >= 50) return 'suplemento';
+    if (p.hc >= 35) return 'hidrato';
+    if (p.kcal < 80 && p.fibra >= 1.2 && p.prot < 6) return 'verdura';
+    if (p.kcal < 95 && p.hc >= 5 && p.fibra < 3 && p.prot < 3) return 'fruta';
+    var p100 = p.prot * 400 / p.kcal;
+    if (p.prot >= 14 && p100 >= 26) return 'proteina';
+    if (p.prot >= 4 && p.prot < 14 && p.hc <= 12 && p.grasa <= 6 && p.kcal < 130) return 'lacteo';
+    if (p.grasa >= 30 || p.kcal >= 380) return 'grasa o dulce';
+    return 'otro';
+  };
+
+  var valorCriterio = function (p, campo) {
+    if (campo === 'prot_por_100kcal') return p.kcal ? p.prot * 100 / p.kcal : 0;
+    return p[campo];
+  };
+
+  // ------------------------------------------------------------- las trampas
+  var trampasQueSaltan = function (p) {
+    var texto = ((p.nombre || '') + ' ' + (p.marca || '') + ' ' +
+                 (p.categorias || '')).toLowerCase();
+    var out = [];
+    D.trampas.forEach(function (t) {
+      var nombra = t.palabras.some(function (w) { return texto.indexOf(w) >= 0; });
+      if (!nombra) return;
+      var r = t.regla, ok = true;
+      if (r.prot_menor !== undefined && !(p.prot < r.prot_menor)) ok = false;
+      if (r.grasa_mayor !== undefined && !(p.grasa > r.grasa_mayor)) ok = false;
+      if (r.hc_mayor !== undefined && !(p.hc > r.hc_mayor)) ok = false;
+      if (r.fibra_menor !== undefined && !(p.fibra < r.fibra_menor)) ok = false;
+      if (ok) out.push(t);
+    });
+    return out;
+  };
+
+  // ------------------------------------------------------------- el veredicto
+  var juzga = function (p) {
+    var hueco = huecoDe(p);
+    var crit = D.criterio[hueco] || D.criterio.otro;
+    var rivales = D.alimentos.filter(function (a) {
+      return a.hueco === hueco && D.usados.indexOf(a.clave) >= 0;
+    });
+    var trampas = trampasQueSaltan(p);
+    var faltan = ['kcal', 'prot', 'hc', 'grasa'].filter(function (k) {
+      return p[k] === null || p[k] === undefined;
+    });
+
+    // 1) Falta informacion -> no se decide a ciegas.
+    if (faltan.length) {
+      return { clase: 'mirar', hueco: hueco,
+               titulo: 'Faltan datos en la ficha',
+               texto: 'La base abierta no trae ' + faltan.join(', ') +
+                      '. Míralo en el envase y escríbelo abajo.',
+               rivales: rivales, crit: crit };
+    }
+
+    // 2) Una trampa grave manda sobre cualquier comparacion.
+    var grave = trampas.filter(function (t) { return t.grave; })[0];
+    if (grave) {
+      return { clase: 'no', hueco: hueco, titulo: grave.titulo,
+               texto: grave.texto, trampas: trampas, rivales: rivales, crit: crit };
+    }
+
+    // 3) Hay huecos que NO se comparan: cualquier verdura y cualquier fruta
+    // valen. Comparandolas por "cual tiene menos calorias", el brocoli perdia
+    // contra la lechuga. Eso es una tonteria, y una tonteria en un veredicto
+    // hace que dejen de creerse los demas.
+    if (!crit.compara) {
+      if (hueco === 'verdura' || hueco === 'fruta') {
+        return { clase: 'si', hueco: hueco,
+                 titulo: hueco === 'verdura' ? 'Verdura: adelante' : 'Fruta: adelante',
+                 texto: 'Cualquier ' + (hueco === 'verdura' ? 'verdura' : 'fruta') +
+                        ' te viene bien. Llevas ' + uno(p.fibra) + ' g de fibra por 100 g, ' +
+                        'y andas justo de fibra varios días.',
+                 trampas: trampas, rivales: [], crit: crit };
+      }
+      return { clase: 'mirar', hueco: hueco, titulo: 'Ni entra ni estorba',
+               texto: 'Es ' + (D.huecoNom[hueco] || hueco) + '. No ocupa ningún hueco del ' +
+                      'plan, así que no cuadra ni descuadra nada: entra en las ' +
+                      D.kcalDia + ' kcal del día o no entra.',
+               trampas: trampas, rivales: [], crit: crit };
+    }
+
+    // 4) Comparar con lo TIPICO de ese hueco, no con el mejor de todos.
+    if (!rivales.length) {
+      return { clase: 'mirar', hueco: hueco,
+               titulo: 'Esto no ocupa ningún hueco del plan',
+               texto: 'No se parece a nada de lo que comes estos treinta días. ' +
+                      'No quiere decir que sea malo: quiere decir que no lo necesitas.',
+               trampas: trampas, rivales: [], crit: crit };
+    }
+    var mio = valorCriterio(p, crit.campo);
+    var puntuados = rivales.map(function (a) {
+      return { a: a, v: valorCriterio(a, crit.campo) };
+    }).sort(function (x, y) { return crit.masEsMejor ? y.v - x.v : x.v - y.v; });
+
+    // La referencia es la MEDIANA de lo que ya usas, no el campeon. Comparando
+    // contra el mejor, la ternera picada magra de verdad salia "peor que lo que
+    // compras" por no llegar al pollo, y el escaner decia que no a casi todo.
+    var vals = puntuados.map(function (x) { return x.v; }).slice().sort(function (a, b) { return a - b; });
+    var med = vals[Math.floor(vals.length / 2)];
+    var mejor = puntuados[0];
+    var razon = med ? mio / med : 1;
+    var gana = crit.masEsMejor ? razon >= 1.15 : razon <= 0.85;
+    var pierde = crit.masEsMejor ? razon <= 0.75 : razon >= 1.35;
+
+    if (gana) {
+      var superaAlMejor = crit.masEsMejor ? mio > mejor.v : mio < mejor.v;
+      return { clase: 'si', hueco: hueco, titulo: 'Mejor que lo que sueles comprar',
+               texto: 'Va sobrado de ' + crit.texto + ' para ese hueco' +
+                      (superaAlMejor ? ', incluso por encima de ' + mejor.a.nombre : '') + '.',
+               trampas: trampas, rivales: puntuados, crit: crit };
+    }
+    if (pierde) {
+      return { clase: 'no', hueco: hueco, titulo: 'Se queda corto para ese hueco',
+               texto: 'Le falta ' + crit.texto + ' comparado con lo que ya compras. ' +
+                      mejor.a.nombre + ' es lo que mejor te va ahí.',
+               trampas: trampas, rivales: puntuados, crit: crit };
+    }
+    return { clase: 'igual', hueco: hueco, titulo: 'Te vale',
+             texto: 'Está en la línea de lo que ya compras en ' + crit.texto + '. ' +
+                    'Si está más barato, adelante.',
+             trampas: trampas, rivales: puntuados, crit: crit };
+  };
+
+  // ------------------------------------------------------------------ pintar
+  var ICONO = { si: '✓', no: '✗', igual: '=', mirar: '?' };
+  var ETIQ = { si: 'Cómpralo', no: 'Déjalo', igual: 'Da igual', mirar: 'Mira la etiqueta' };
+
+  var pinta = function (p, v, codigo) {
+    var h = [];
+    h.push('<div class="ver ver-' + v.clase + '">');
+    h.push('<div class="ver-cab"><span class="ver-ico" aria-hidden="true">' +
+           ICONO[v.clase] + '</span><div><p class="ver-et">' + ETIQ[v.clase] + '</p>' +
+           '<p class="ver-tit">' + esc(v.titulo) + '</p></div></div>');
+    h.push('<p class="ver-txt">' + esc(v.texto) + '</p>');
+
+    h.push('<p class="ver-prod"><strong>' + esc(p.nombre || 'Sin nombre') + '</strong>' +
+           (p.marca ? ' · ' + esc(p.marca) : '') +
+           ' <span class="ver-hueco">' + esc(D.huecoNom[v.hueco] || v.hueco) + '</span></p>');
+
+    h.push('<table class="ver-tabla"><tr><th>por 100 g</th><th>kcal</th><th>prot</th>' +
+           '<th>hidr</th><th>grasa</th><th>fibra</th></tr><tr><td>Este</td>' +
+           ['kcal', 'prot', 'hc', 'grasa', 'fibra'].map(function (k) {
+             return '<td>' + (p[k] == null ? '—' : uno(p[k])) + '</td>';
+           }).join('') + '</tr>');
+    if (v.rivales && v.rivales.length) {
+      var r0 = v.rivales[0].a || v.rivales[0];
+      h.push('<tr><td>' + esc(r0.nombre) + '</td>' +
+             ['kcal', 'prot', 'hc', 'grasa', 'fibra'].map(function (k) {
+               return '<td>' + uno(r0[k]) + '</td>';
+             }).join('') + '</tr>');
+    }
+    h.push('</table>');
+
+    (v.trampas || []).forEach(function (t) {
+      if (v.titulo === t.titulo) return;
+      h.push('<div class="ver-aviso"><strong>' + esc(t.titulo) + '.</strong> ' +
+             esc(t.texto) + '</div>');
+    });
+
+    if (v.rivales && v.rivales.length && v.clase === 'no') {
+      var alt = v.rivales.slice(0, 2).map(function (x) {
+        var a = x.a || x;
+        return esc(a.nombre) + (a.eur_kg ? ' (' + uno(a.eur_kg) + ' €/kg)' : '');
+      });
+      h.push('<p class="ver-alt"><strong>En su lugar:</strong> ' + alt.join(' · ') + '</p>');
+    }
+    h.push('<p class="ver-cod">Código ' + esc(codigo || 'escrito a mano') + '</p>');
+    h.push('</div>');
+    salida.innerHTML = h.join('');
+    salida.hidden = false;
+    salida.scrollIntoView({ block: 'nearest' });
+    try { if (navigator.vibrate) navigator.vibrate(v.clase === 'no' ? [90, 60, 90] : 60); }
+    catch (e) {}
+  };
+
+  // ------------------------------------------------------- buscar el producto
+  var deOFF = function (j) {
+    var p = j.product || {}, n = p.nutriments || {};
+    var kcal = num(n['energy-kcal_100g']);
+    if (kcal === null && num(n['energy_100g']) !== null) kcal = num(n['energy_100g']) / 4.184;
+    return {
+      nombre: p.product_name_es || p.product_name || '',
+      marca: (p.brands || '').split(',')[0].trim(),
+      categorias: (p.categories || '') + ' ' + (p.generic_name || ''),
+      kcal: kcal, prot: num(n.proteins_100g), hc: num(n.carbohydrates_100g),
+      grasa: num(n.fat_100g), fibra: num(n.fiber_100g) === null ? 0 : num(n.fiber_100g)
+    };
+  };
+
+  var buscando = false;
+  var ultimo = '';
+  var ultimoT = 0;
+
+  var resuelve = function (codigo) {
+    if (buscando) return;
+    // El mismo codigo dos veces seguidas en menos de 3 s es la camara leyendo
+    // el mismo envase, no un producto nuevo.
+    var ahora = Date.now();
+    if (codigo === ultimo && ahora - ultimoT < 3000) return;
+    ultimo = codigo; ultimoT = ahora;
+
+    if (cache[codigo]) {
+      var pc = cache[codigo];
+      pinta(pc, juzga(pc), codigo);
+      apunta(codigo, pc, juzga(pc));
+      return;
+    }
+    buscando = true;
+    estado.textContent = 'Buscando ' + codigo + '…';
+    var url = 'https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(codigo) +
+              '.json?fields=product_name,product_name_es,brands,categories,generic_name,nutriments';
+    fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      buscando = false;
+      if (!j || j.status === 0 || !j.product) {
+        estado.textContent = '';
+        salida.innerHTML = '<div class="ver ver-mirar"><div class="ver-cab">' +
+          '<span class="ver-ico" aria-hidden="true">?</span><div>' +
+          '<p class="ver-et">No está en la base</p>' +
+          '<p class="ver-tit">Código ' + esc(codigo) + '</p></div></div>' +
+          '<p class="ver-txt">Suele pasar con las marcas blancas. Copia los cinco ' +
+          'números de la tabla del envase aquí abajo y te lo digo igual.</p></div>';
+        salida.hidden = false;
+        document.getElementById('mKcal').focus();
+        return;
+      }
+      var p = deOFF(j);
+      cache[codigo] = p; guardaCache();
+      estado.textContent = '';
+      var v = juzga(p);
+      pinta(p, v, codigo);
+      apunta(codigo, p, v);
+    }).catch(function () {
+      buscando = false;
+      estado.textContent = 'Sin conexión. Escribe los números del envase.';
+    });
+  };
+
+  // ------------------------------------------------------------- la camara
+  var stream = null, corriendo = false, detector = null;
+
+  var pararCamara = function () {
+    corriendo = false;
+    if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+    video.hidden = true;
+    btnCam.textContent = 'Encender la cámara';
+  };
+
+  var bucle = function () {
+    if (!corriendo || !detector) return;
+    detector.detect(video).then(function (codes) {
+      if (codes && codes.length) resuelve(codes[0].rawValue);
+    }).catch(function () {}).then(function () {
+      if (corriendo) requestAnimationFrame(bucle);
+    });
+  };
+
+  var arrancarCamara = function () {
+    if (corriendo) { pararCamara(); return; }
+    if (!('BarcodeDetector' in window)) {
+      estado.textContent = 'Este navegador no lee códigos. Escribe el número de ' +
+                           'debajo del código de barras, o los datos del envase.';
+      document.getElementById('mCodigo').focus();
+      return;
+    }
+    estado.textContent = 'Pidiendo la cámara…';
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
+    }).then(function (s) {
+      stream = s; video.srcObject = s; video.hidden = false;
+      video.play();
+      detector = new window.BarcodeDetector({
+        formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128']
+      });
+      corriendo = true;
+      btnCam.textContent = 'Apagar la cámara';
+      estado.textContent = 'Apunta al código de barras. No hace falta tocar nada.';
+      requestAnimationFrame(bucle);
+    }).catch(function () {
+      estado.textContent = 'No me has dado permiso para la cámara, o no hay. ' +
+                           'Puedes escribir el código a mano.';
+    });
+  };
+
+  btnCam.addEventListener('click', arrancarCamara);
+  // Al salir de la pagina o apagar la pantalla, la camara se suelta: si no, se
+  // queda encendida gastando bateria en el bolsillo.
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden && corriendo) pararCamara();
+  });
+  window.addEventListener('pagehide', pararCamara);
+
+  // --------------------------------------------------------- entrada a mano
+  manual.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var p = {
+      nombre: document.getElementById('mNombre').value || 'Producto sin nombre',
+      marca: '', categorias: document.getElementById('mNombre').value || '',
+      kcal: num(document.getElementById('mKcal').value),
+      prot: num(document.getElementById('mProt').value),
+      hc: num(document.getElementById('mHc').value),
+      grasa: num(document.getElementById('mGrasa').value),
+      fibra: num(document.getElementById('mFibra').value) || 0
+    };
+    if (p.kcal === null || p.prot === null) {
+      estado.textContent = 'Hacen falta al menos las calorías y la proteína.';
+      return;
+    }
+    var cod = document.getElementById('mCodigo').value.trim();
+    if (cod) { cache[cod] = p; guardaCache(); }
+    var v = juzga(p);
+    pinta(p, v, cod);
+    apunta(cod || '(a mano)', p, v);
+  });
+
+  // ------------------------------------------------------------------ datos
+  fetch('escaner.json').then(function (r) { return r.json(); }).then(function (j) {
+    D = j;
+    estado.textContent = '';
+    btnCam.disabled = false;
+    document.getElementById('escanerCargando').hidden = true;
+  }).catch(function () {
+    estado.textContent = 'No se han podido cargar los datos del plan. ' +
+                         'Abre la página con conexión al menos una vez.';
+  });
 })();

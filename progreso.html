@@ -8,8 +8,8 @@
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#5E2740">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1211">
 <title>Mi progreso · Plan de comidas</title>
-<link rel="stylesheet" href="estilo.css?v=6c439b63">
-<link rel="manifest" href="manifest.json?v=6c439b63">
+<link rel="stylesheet" href="estilo.css?v=d3384ab1">
+<link rel="manifest" href="manifest.json?v=d3384ab1">
 <link rel="icon" href="favicon.png" sizes="64x64">
 <link rel="apple-touch-icon" href="icono-apple.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,7 +27,7 @@
         <span class="btn-menu-txt">Menú</span>
       </button>
     </div>
-    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html">Nutrientes</a><a href="progreso.html" aria-current="page" class="actual">Mi progreso</a><a href="imprevistos.html">Imprevistos</a><a href="guia.html">Guía</a></nav>
+    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="escanear.html">Escanear</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html">Nutrientes</a><a href="progreso.html" aria-current="page" class="actual">Mi progreso</a><a href="imprevistos.html">Imprevistos</a><a href="guia.html">Guía</a></nav>
   </div>
 </header>
 <main id="principal" class="contenido">
@@ -42,7 +42,7 @@
 <h2>Todos los pesos apuntados</h2>
 <div class="tabla-caja"><table id="tablaPeso"><thead><tr><th>Fecha</th><th style="text-align:right">Peso</th><th>&nbsp;</th></tr></thead><tbody></tbody></table></div>
 <button type="button" class="btn-reset" id="borrarTodo">Borrar todo el historial</button>
-<h2>Copia de seguridad</h2>
+<h2 id="copia">Copia de seguridad</h2>
 <p>Lo que marcas en la compra, el día por el que vas y todos los pesos <strong>viven solo en este móvil</strong>. Si cambias de teléfono, borras los datos del navegador o la página se muda a otra dirección, se quedan atrás. Con estos dos botones te los llevas.</p>
 <div class="tarjeta" style="padding:14px;display:flex;flex-wrap:wrap;gap:12px"><button type="button" class="enlace-video" id="guardarCopia" style="border:none;cursor:pointer">Guardar una copia</button><button type="button" class="enlace-video" id="restaurarCopia" style="border:none;cursor:pointer">Restaurar una copia</button><input type="file" id="ficheroCopia" accept="application/json,.json" tabindex="-1" aria-hidden="true" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></div>
 <div class="aviso" id="avisoCopia" role="status" aria-live="polite" hidden></div>
@@ -58,6 +58,6 @@
   ingrediente a ingrediente.</p>
 </footer>
 <button type="button" class="arriba" id="btnArriba" aria-label="Volver arriba">&#8593;</button>
-<script src="app.js?v=6c439b63"></script>
+<script src="app.js?v=d3384ab1"></script>
 </body>
 </html>
