@@ -231,7 +231,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=87aeb6c0').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=b999d19c').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -1527,6 +1527,35 @@ if ('serviceWorker' in navigator) {
            Math.round(p.kcal) + '. Algún número lo habré leído mal: compruébalo antes de fiarte.';
   };
 
+  // LAS TRES PUERTAS que tiene que pasar lo leido de una foto antes de que se
+  // ofrezca como si fuera un dato.
+  //
+  // Medido sobre las 40 fotos de etiquetas reales del proyecto: 9 pasaban de dos
+  // numeros y RELLENABAN EL FORMULARIO, ninguna con los valores correctos, y 6 de
+  // esas 9 sin ningun aviso. Entre ellas, 609 g de proteina, 499 g de hidratos y
+  // 2.000 kcal por 100 g. Con estas tres puertas no cuela ninguna de las 40.
+  //
+  // La regla: o los numeros son de fiar, o se dice que no se han podido leer.
+  // Un lector que a veces acierta y a veces te da 609 g de proteina sin avisar es
+  // peor que no tener lector.
+  var deFiar = function (r) {
+    // 1. Estan los cuatro que deciden. Con la grasa a medias no se juzga nada.
+    var faltan = ['kcal', 'prot', 'hc', 'grasa'].filter(function (k) { return r[k] === null; });
+    if (faltan.length) return 'Solo he sacado ' + (4 - faltan.length) + ' de los 4 números que hacen falta';
+    // 2. Son numeros posibles. Es la MISMA regla que filtra la base de productos:
+    //    en 100 g no caben 609 g de proteina ni 2.000 kcal.
+    if (!(r.kcal > 0 && r.kcal <= 900)) return 'He leído ' + Math.round(r.kcal) + ' kcal por 100 g, que no puede ser';
+    var malo = ['prot', 'hc', 'grasa', 'fibra'].filter(function (k) {
+      return r[k] !== null && (r[k] < 0 || r[k] > 100);
+    });
+    if (malo.length) return 'He leído cantidades imposibles (más de 100 g en 100 g)';
+    if (r.prot + r.hc + r.grasa > 100.5) return 'Los macros suman más de 100 g en 100 g de producto';
+    // 3. Cuadran entre ellos.
+    var d = compruebaAtwater(r);
+    if (d) return d;
+    return null;
+  };
+
   var pon = function (id, v) {
     if (v !== null && v !== undefined && isFinite(v)) {
       document.getElementById(id).value = uno(v);
@@ -1563,14 +1592,18 @@ if ('serviceWorker' in navigator) {
           return r[k2] !== null;
         });
         estado.textContent = '';
-        if (leidos.length < 2) {
+        var porque = leidos.length < 2 ? 'No he sacado la tabla' : deFiar(r);
+        if (porque) {
           salida.innerHTML = '<div class="ver ver-mirar"><div class="ver-cab">' +
             '<span class="ver-ico" aria-hidden="true">?</span><div>' +
-            '<p class="ver-et">No he sacado la tabla</p>' +
-            '<p class="ver-tit">Prueba otra vez</p></div></div>' +
-            '<p class="ver-txt">Acerca más, que se vea solo la tabla y sin brillos. ' +
-            'Si no hay manera, escríbelos abajo: son cinco números.</p></div>';
+            '<p class="ver-et">No me fío de lo que he leído</p>' +
+            '<p class="ver-tit">Mejor escríbelos tú</p></div></div>' +
+            '<p class="ver-txt">' + esc(porque) + '. Con el envase entero en la foto ' +
+            'casi nunca sale: <strong>acerca la cámara hasta que la tabla ocupe toda la ' +
+            'pantalla</strong>, sin brillos. Si no hay manera, son cinco números aquí ' +
+            'abajo y no te los vuelvo a pedir nunca.</p></div>';
           salida.hidden = false;
+          document.getElementById('mKcal').focus();
           return;
         }
         pon('mKcal', r.kcal); pon('mProt', r.prot); pon('mHc', r.hc);

@@ -7,3 +7,7 @@ __pycache__/
 *.respaldo-prueba
 .DS_Store
 Thumbs.db
+
+# Fotos de etiquetas copiadas aqui SOLO para probar el lector con el navegador.
+# Se borran al terminar; el ignore esta para que no se cuelen si algo falla.
+_fotos-prueba/
