@@ -231,7 +231,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=ad902596').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=253ba754').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -1196,10 +1196,10 @@ if ('serviceWorker' in navigator) {
     };
   };
 
-  // La base empaquetada NO es un JSON. Son 240.000 lineas de texto:
+  // La base empaquetada NO es un JSON. Son mas de doscientas mil lineas de texto:
   //     codigo|nombre|marca|kcal|proteina|hidratos|grasa|fibra
   //
-  // En JSON habria que convertirla en 240.000 objetos de JavaScript nada mas
+  // En JSON habria que convertirla en otros tantos objetos de JavaScript nada mas
   // abrir la pagina, y eso son mas de cien megas de memoria: en un movil normal
   // se cierra la pestania. Como texto se queda en una sola cadena y se busca
   // dentro con indexOf, que tarda unos milisegundos. Se escanea un producto cada
