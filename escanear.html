@@ -8,8 +8,8 @@
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#5E2740">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1211">
 <title>Escanear · Plan de comidas</title>
-<link rel="stylesheet" href="estilo.css?v=b5c6c9f0">
-<link rel="manifest" href="manifest.json?v=b5c6c9f0">
+<link rel="stylesheet" href="estilo.css?v=87aeb6c0">
+<link rel="manifest" href="manifest.json?v=87aeb6c0">
 <link rel="icon" href="favicon.png" sizes="64x64">
 <link rel="apple-touch-icon" href="icono-apple.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -36,7 +36,7 @@
 <div id="escaner">
 <p id="escanerCargando" class="entrada">Cargando los datos del plan…</p>
 <div class="escaner-barra"><button type="button" class="enlace-video" id="btnCamara" disabled style="border:none;cursor:pointer">Encender la cámara</button><button type="button" class="enlace-video" id="btnEtiqueta" disabled style="border:none;cursor:pointer">Leer la etiqueta</button><p id="estadoEscaner" role="status" aria-live="polite"></p></div>
-<input type="file" id="fotoEtiqueta" accept="image/*" capture="environment" hidden>
+<input type="file" id="fotoEtiqueta" accept="image/*" capture="environment" aria-label="Foto de la tabla nutricional" hidden>
 <div class="escaner-caja"><video id="camara" playsinline muted hidden></video></div>
 <div id="veredicto" role="status" aria-live="polite" hidden></div>
 <p id="estadoBase" class="nota-base"></p>
@@ -63,6 +63,6 @@
   ingrediente a ingrediente.</p>
 </footer>
 <button type="button" class="arriba" id="btnArriba" aria-label="Volver arriba">&#8593;</button>
-<script src="app.js?v=b5c6c9f0"></script>
+<script src="app.js?v=87aeb6c0"></script>
 </body>
 </html>

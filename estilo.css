@@ -3,22 +3,26 @@
   --papel:#FAFAF7; --tarjeta:#FFFFFF; --tinta:#14171A; --suave:#4A5259; --linea:#D8DCD6;
   --acento:#5E2740; --acento-claro:#F3E7EC; --verde:#2F5C40; --verde-claro:#E4EEE7;
   --alerta:#8A3A12; --alerta-claro:#FBEBE0;
+  --v-si:#2E7D4F; --v-no:#B3261E; --v-mirar:#8A5200;
   --sombra:0 1px 2px rgba(20,23,26,.06), 0 6px 18px rgba(20,23,26,.05);
 }
 @media (prefers-color-scheme:dark){ :root{
   --papel:#0F1211; --tarjeta:#191D1B; --tinta:#F0F2ED; --suave:#A8B0A8; --linea:#2E3430;
   --acento:#EBA2C0; --acento-claro:#2B1D25; --verde:#8CC49B; --verde-claro:#16241C;
   --alerta:#F0A67A; --alerta-claro:#2A1A11;
+  --v-si:#8CC49B; --v-no:#F2857C; --v-mirar:#F0A67A;
   --sombra:0 1px 2px rgba(0,0,0,.5), 0 6px 18px rgba(0,0,0,.35); } }
 :root[data-theme="dark"]{
   --papel:#0F1211; --tarjeta:#191D1B; --tinta:#F0F2ED; --suave:#A8B0A8; --linea:#2E3430;
   --acento:#EBA2C0; --acento-claro:#2B1D25; --verde:#8CC49B; --verde-claro:#16241C;
   --alerta:#F0A67A; --alerta-claro:#2A1A11;
+  --v-si:#8CC49B; --v-no:#F2857C; --v-mirar:#F0A67A;
   --sombra:0 1px 2px rgba(0,0,0,.5), 0 6px 18px rgba(0,0,0,.35); }
 :root[data-theme="light"]{
   --papel:#FAFAF7; --tarjeta:#FFFFFF; --tinta:#14171A; --suave:#4A5259; --linea:#D8DCD6;
   --acento:#5E2740; --acento-claro:#F3E7EC; --verde:#2F5C40; --verde-claro:#E4EEE7;
   --alerta:#8A3A12; --alerta-claro:#FBEBE0;
+  --v-si:#2E7D4F; --v-no:#B3261E; --v-mirar:#8A5200;
   --sombra:0 1px 2px rgba(20,23,26,.06), 0 6px 18px rgba(20,23,26,.05); }
 
 *{box-sizing:border-box}
@@ -163,7 +167,7 @@ tr:last-child td{ border-bottom:none }
 .ver-cab{ display:flex; gap:14px; align-items:center; margin-bottom:10px }
 .ver-ico{ font-size:32px; line-height:1; font-weight:700; width:52px; height:52px;
   border-radius:50%; display:grid; place-items:center; flex:0 0 auto; color:#fff }
-.ver-et{ margin:0; font-size:13px; letter-spacing:.1em; text-transform:uppercase; font-weight:700 }
+.ver-et{ margin:0; font-size:15px; letter-spacing:.08em; text-transform:uppercase; font-weight:700 }
 .ver-tit{ margin:2px 0 0; font-size:21px; font-weight:700; line-height:1.2 }
 .ver-txt{ margin:0 0 12px; font-size:17px }
 .ver-prod{ margin:0 0 10px; font-size:16px }
@@ -176,11 +180,18 @@ tr:last-child td{ border-bottom:none }
   border:1px solid var(--linea) }
 .ver-alt{ margin:12px 0 0; font-size:16px }
 .ver-cod{ margin:10px 0 0; font-size:14px; color:var(--suave) }
-.ver-si{ border-color:#2E7D4F } .ver-si .ver-ico{ background:#2E7D4F } .ver-si .ver-et{ color:#2E7D4F }
-.ver-no{ border-color:#B3261E } .ver-no .ver-ico{ background:#B3261E } .ver-no .ver-et{ color:#B3261E }
+/* COMPRALO, DEJALO y MIRA LA ETIQUETA son las tres palabras que se leen de
+   un vistazo en el pasillo, y estaban con el color escrito a fuego, pensado
+   para fondo claro. En modo oscuro daban 2,88 de contraste («Déjalo»), 2,95
+   y 3,73, con 4,5 de minimo: la palabra que decide, ilegible. Ahora van por
+   variable, como el resto del sitio.
+   El circulo del icono se queda con el color fuerte en los dos modos: lleva
+   el simbolo en blanco encima y ahi el contraste sobra. */
+.ver-si{ border-color:var(--v-si) } .ver-si .ver-ico{ background:#2E7D4F } .ver-si .ver-et{ color:var(--v-si) }
+.ver-no{ border-color:var(--v-no) } .ver-no .ver-ico{ background:#B3261E } .ver-no .ver-et{ color:var(--v-no) }
 .ver-igual .ver-ico{ background:#5C635E }
-.ver-mirar{ border-color:#8A5200 } .ver-mirar .ver-ico{ background:#8A5200 }
-.ver-mirar .ver-et{ color:#8A5200 }
+.ver-mirar{ border-color:var(--v-mirar) } .ver-mirar .ver-ico{ background:#8A5200 }
+.ver-mirar .ver-et{ color:var(--v-mirar) }
 .form-escaner{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px }
 .nota-base{ font-size:15px; color:var(--suave); margin:10px 0 0 }
 /* Botones para cuando el codigo es de balanza. Grandes: se pulsan de pie, en un

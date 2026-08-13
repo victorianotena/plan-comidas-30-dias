@@ -231,7 +231,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=b5c6c9f0').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=87aeb6c0').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -1672,6 +1672,22 @@ if ('serviceWorker' in navigator) {
     // sin ella (busca en Open Food Facts), y con ella deja de necesitar internet.
     var n = document.getElementById('estadoBase');
     if (n) n.textContent = 'Bajando la base de productos…';
+    // Se espera a que el service worker mande antes de pedir la base.
+    //
+    // El service worker se registra al terminar de cargar la pagina, y la base se
+    // pedia enseguida: en la PRIMERA visita ganaba la carrera la peticion, asi que
+    // esos 4 MB no los veia nadie y no se guardaban. A la visita siguiente se
+    // volvian a bajar. Esperando (como mucho 4 segundos) se baja una sola vez y
+    // queda guardada. Si el navegador no tiene service worker, se pide y ya.
+    var conCache = function (sigue) {
+      if (!('serviceWorker' in navigator) || navigator.serviceWorker.controller) { sigue(); return; }
+      var hecho = false;
+      var ya = function () { if (!hecho) { hecho = true; sigue(); } };
+      try { navigator.serviceWorker.addEventListener('controllerchange', ya); } catch (e) {}
+      setTimeout(ya, 4000);
+    };
+
+    conCache(function () {
     // Con el sello en la direccion. Sin el, el navegador puede servir la copia
     // que tenga guardada: se vio en una prueba contra la web publicada, donde
     // decia 238.791 productos cuando el fichero ya tenia 217.671. Asi la base y
@@ -1692,6 +1708,7 @@ if ('serviceWorker' in navigator) {
         n.textContent = 'No he podido bajar la base de productos. El escáner ' +
                         'funciona igual, pero necesitará cobertura.';
       }
+    });
     });
   }).catch(function () {
     estado.textContent = 'No se han podido cargar los datos del plan. ' +
