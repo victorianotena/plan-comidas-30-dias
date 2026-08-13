@@ -194,6 +194,11 @@ tr:last-child td{ border-bottom:none }
 .ver-mirar .ver-et{ color:var(--v-mirar) }
 .form-escaner{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px }
 .nota-base{ font-size:15px; color:var(--suave); margin:10px 0 0 }
+/* Un enlace que va solo en su parrafo es un boton disfrazado, y a 25 px de
+   alto se falla al pulsarlo con el pulgar. Los de dentro de una frase se
+   quedan como estan: agrandarlos rompe el renglon. */
+.enlace-solo{ display:inline-flex; align-items:center; min-height:44px;
+  text-underline-offset:3px }
 /* Botones para cuando el codigo es de balanza. Grandes: se pulsan de pie, en un
    pasillo, con una mano ocupada por el carro. */
 .peso-botones{ display:flex; flex-wrap:wrap; gap:9px; margin:12px 0 4px }
