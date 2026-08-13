@@ -231,7 +231,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=bf755fb0').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=e034fbe1').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -454,10 +454,17 @@
     fichero.click();
   });
 
-  // Las tres claves con datos suyos. 'sw-ultima-comprobacion' no entra: es un
-  // apunte interno del service worker y restaurarlo solo retrasaria una
-  // comprobacion de version.
-  var CLAVES = ['compra-marcados', 'plan-dia-actual', 'registro-peso'];
+  // Las claves con datos SUYOS. 'sw-ultima-comprobacion' no entra: es un apunte
+  // interno del service worker y restaurarlo solo retrasaria una comprobacion de
+  // version. 'escaner-cache' tampoco: eso se saca otra vez de la base en un
+  // instante y ademas caduca con la version.
+  //
+  // 'escaner-mano' y 'escaner-historial' SI, y faltaban. La pagina del escaner le
+  // promete que lo que teclea del envase queda guardado "para siempre" y que lo
+  // puede exportar desde aqui; sin estas dos claves, cambiar de movil se lo
+  // llevaba todo por delante despues de habérselo prometido dos veces.
+  var CLAVES = ['compra-marcados', 'plan-dia-actual', 'registro-peso',
+                'escaner-mano', 'escaner-historial'];
 
   var decir = function (txt, mal) {
     aviso.textContent = txt;
@@ -719,8 +726,12 @@ if ('serviceWorker' in navigator) {
   var guardaCache = function () {
     try { localStorage.setItem(CLAVE_CACHE, JSON.stringify(cache)); } catch (e) {}
   };
+  // Devuelve si ha podido de verdad. En modo privado o con la memoria llena,
+  // setItem lanza; antes se tragaba la excepcion y se le prometia igualmente que
+  // no se le volveria a preguntar.
   var guardaMano = function () {
-    try { localStorage.setItem(CLAVE_MANO, JSON.stringify(mano)); } catch (e) {}
+    try { localStorage.setItem(CLAVE_MANO, JSON.stringify(mano)); return true; }
+    catch (e) { return false; }
   };
 
   var apunta = function (codigo, prod, ver) {
@@ -766,7 +777,16 @@ if ('serviceWorker' in navigator) {
   // del mundo y no van a estarlo. Buscarlos es perder el tiempo y acabar
   // pidiendole que teclee.
   var esBalanza = function (c) {
-    return /^2\d{6,}$/.test(c) && (c.length === 12 || c.length === 13);
+    if (!/^\d+$/.test(c)) return false;
+    // Un codigo de barras de producto tiene 8, 12 o 13 digitos. Todo lo demas lo
+    // ha compuesto la balanza o la etiquetadora de la tienda: en la base hay
+    // 11.018 codigos de 18 digitos y 1.788 de 24, y el lector devuelve esos
+    // numeros enteros porque tambien lee code_128.
+    if (c.length > 13) return true;
+    // Los prefijos 2 son de "circulacion restringida" en TODAS las longitudes,
+    // no solo en 12 y 13. En la base habia 4.647 codigos de 8 digitos que
+    // empiezan por 2 y se estaban tratando como productos de verdad.
+    return c.charAt(0) === '2' && (c.length === 8 || c.length === 12 || c.length === 13);
   };
 
   // ------------------------------------------------------- en que hueco cae
@@ -823,13 +843,39 @@ if ('serviceWorker' in navigator) {
   };
 
   // ------------------------------------------------------------- las trampas
+  // Las palabras de las trampas son EXPRESIONES REGULARES, no subcadenas.
+  // Buscando "0%" con indexOf casaba dentro de "100%" y de "60%": 1.916
+  // productos de la base, panes integrales incluidos. Y un aviso en falso hace
+  // que dejen de creerse los que si son ciertos.
+  //
+  // Las expresiones ya compiladas se guardan colgadas de la propia funcion y no
+  // en una variable de fuera, para que `casa` se pueda sacar del fuente y probar
+  // sola. Una funcion que necesita el vecindario para funcionar es una funcion
+  // que el arnes de pruebas no puede ejercitar.
+  var casa = function (lista, texto) {
+    if (!lista || !lista.length) return false;
+    var re = casa._re || (casa._re = {});
+    for (var i = 0; i < lista.length; i++) {
+      var w = lista[i];
+      if (!(w in re)) { try { re[w] = new RegExp(w, 'i'); } catch (e) { re[w] = null; } }
+      if (re[w] ? re[w].test(texto) : texto.indexOf(w) >= 0) return true;
+    }
+    return false;
+  };
+
   var trampasQueSaltan = function (p) {
     var texto = ((p.nombre || '') + ' ' + (p.marca || '') + ' ' +
                  (p.categorias || '')).toLowerCase();
     var out = [];
     D.trampas.forEach(function (t) {
-      var nombra = t.palabras.some(function (w) { return texto.indexOf(w) >= 0; });
-      if (!nombra) return;
+      if (!casa(t.palabras, texto)) return;
+      // "requiere": ademas tiene que aparecer alguna de estas. Sin esto, "griego"
+      // saltaba con el queso griego (93 productos) y "legumbre" con las bebidas
+      // vegetales (412 que no eran pasta).
+      if (t.requiere && t.requiere.length && !casa(t.requiere, texto)) return;
+      // "excluye": si aparece alguna, no salta. El aviso del atun habla de
+      // escurrir la lata y saltaba con 115 pates, cremas y atunes en salsa.
+      if (t.excluye && casa(t.excluye, texto)) return;
       var r = t.regla, ok = true;
       if (r.prot_menor !== undefined && !(p.prot < r.prot_menor)) ok = false;
       if (r.grasa_mayor !== undefined && !(p.grasa > r.grasa_mayor)) ok = false;
@@ -858,10 +904,16 @@ if ('serviceWorker' in navigator) {
 
     // 1) Falta informacion -> no se decide a ciegas.
     if (faltan.length) {
+      // Los nombres que se enseñan, no las claves internas, y sin culpar a la
+      // base cuando los numeros los ha puesto el.
+      var COMO = { kcal: 'las calorías', prot: 'la proteína',
+                   hc: 'los hidratos', grasa: 'la grasa' };
+      var suyo = p.fuente === 'mano' || p.fuente === 'foto';
       return { clase: 'mirar', hueco: hueco,
-               titulo: 'Faltan datos en la ficha',
-               texto: 'La base abierta no trae ' + faltan.join(', ') +
-                      '. Míralo en el envase y escríbelo abajo.',
+               titulo: 'Faltan datos para decidir',
+               texto: (suyo ? 'Falta ' : 'La ficha no trae ') +
+                      faltan.map(function (k) { return COMO[k] || k; }).join(', ') +
+                      '. Míralo en el envase y escríbelo aquí abajo.',
                rivales: rivales, crit: crit };
     }
 
@@ -877,6 +929,28 @@ if ('serviceWorker' in navigator) {
     // contra la lechuga. Eso es una tonteria, y una tonteria en un veredicto
     // hace que dejen de creerse los demas.
     if (!crit.compara) {
+      // UNA BEBIDA NO ES UNA FRUTA, aunque por macros no haya quien las separe.
+      // Una Coca-Cola son 42 kcal, 0 de proteina, 10,6 de hidratos, 0 de grasa y
+      // la fibra sin declarar; una nectarina son 42, 1,1, 10, 0,3 y 1,6. Con la
+      // fibra ausente (el 70 % de la base) no hay cuenta que valga, asi que
+      // salian 3.123 refrescos, zumos y cervezas con el tick verde de "adelante".
+      //
+      // Dos redes: el nombre, y que no tenga NADA de proteina ni de grasa, que en
+      // una verdura o una fruta de verdad no pasa.
+      var _txt = ((p.nombre || '') + ' ' + (p.marca || '') + ' ' +
+                  (p.categorias || '')).toLowerCase();
+      var pareceBebida = casa(D.bebidas || [], _txt) ||
+          ((p.fibra === null || p.fibra === undefined) && !p.prot && !p.grasa);
+      if ((hueco === 'verdura' || hueco === 'fruta') && pareceBebida) {
+        return { clase: 'mirar', hueco: hueco,
+                 titulo: 'Esto parece una bebida',
+                 texto: 'Por los números podría pasar por fruta, pero en la tabla se ' +
+                        'parecen tanto que no puedo distinguirlas. Si es un refresco o un ' +
+                        'zumo, cuenta como azúcar y no como fruta' +
+                        (p.kcal ? ': un vaso de 330 ml son unas ' +
+                                  Math.round(p.kcal * 3.3) + ' kcal.' : '.'),
+                 trampas: trampas, rivales: [], crit: crit };
+      }
       if (hueco === 'verdura' || hueco === 'fruta') {
         return { clase: 'si', hueco: hueco,
                  titulo: hueco === 'verdura' ? 'Verdura: adelante' : 'Fruta: adelante',
@@ -925,7 +999,14 @@ if ('serviceWorker' in navigator) {
     // contra el mejor, la ternera picada magra de verdad salia "peor que lo que
     // compras" por no llegar al pollo, y el escaner decia que no a casi todo.
     var vals = puntuados.map(function (x) { return x.v; }).slice().sort(function (a, b) { return a - b; });
-    var med = vals[Math.floor(vals.length / 2)];
+    // Con un numero PAR de rivales, vals[len/2] no es la mediana: es el de
+    // arriba. Con 2 rivales era directamente el maximo, o sea el "comparar
+    // contra el campeon" que este mismo comentario decia haber quitado. En el
+    // hueco de proteina daba 12,42 en vez de 11,24, y por eso el huevo entero y
+    // el parmesano (los dos del plan) recibian "Dejalo".
+    var med = vals.length % 2
+      ? vals[(vals.length - 1) / 2]
+      : (vals[vals.length / 2 - 1] + vals[vals.length / 2]) / 2;
     var mejor = puntuados[0];
     var razon = med ? mio / med : 1;
     var gana = crit.masEsMejor ? razon >= 1.15 : razon <= 0.85;
@@ -1091,6 +1172,11 @@ if ('serviceWorker' in navigator) {
     h.push('<p class="ver-cod">Código ' + esc(codigo) + '</p></div>');
     salida.innerHTML = h.join('');
     salida.scrollIntoView({ block: 'nearest' });
+    // La carne y el pescado son lo que mas compra y no aparecian en el historial,
+    // porque este camino no pasa por resuelveY().
+    apunta(codigo, { nombre: a.nombre, marca: '', kcal: a.kcal, prot: a.prot,
+                     hc: a.hc, grasa: a.grasa, fibra: a.fibra, fuente: 'peso' },
+           { hueco: a.hueco, clase: 'si' });
   };
 
   // ------------------------------------------------------- buscar el producto
@@ -1146,7 +1232,21 @@ if ('serviceWorker' in navigator) {
   // Cuando no hay manera, el formulario sale CON EL CODIGO YA PUESTO. Sin eso,
   // lo que escribia se guardaba con codigo vacio y el mismo producto se lo
   // volvia a preguntar la siguiente vez, y la siguiente.
+  // Vaciar el formulario ANTES de pedir datos nuevos.
+  //
+  // Sin esto pasaba lo siguiente, y es de lo peor que hay: tecleas el producto A,
+  // escaneas el B, no esta en ninguna base, sale el formulario con el codigo de B
+  // y LOS MACROS DE A todavia puestos. Le das al boton y se guarda B con los
+  // numeros de A, "para siempre" y sin preguntar mas.
+  var vaciaFormulario = function () {
+    ['mNombre', 'mKcal', 'mProt', 'mHc', 'mGrasa', 'mFibra'].forEach(function (id) {
+      var e = document.getElementById(id);
+      if (e) e.value = '';
+    });
+  };
+
   var pideEtiqueta = function (codigo, et, txt) {
+    vaciaFormulario();
     salida.innerHTML = '<div class="ver ver-mirar"><div class="ver-cab">' +
       '<span class="ver-ico" aria-hidden="true">?</span><div>' +
       '<p class="ver-et">' + esc(et) + '</p>' +
@@ -1166,7 +1266,13 @@ if ('serviceWorker' in navigator) {
     // El mismo codigo dos veces seguidas en menos de 3 s es la camara leyendo
     // el mismo envase, no un producto nuevo.
     var ahora = Date.now();
-    if (codigo === ultimo && ahora - ultimoT < 3000) return;
+    if (codigo === ultimo && ahora - ultimoT < 3000) {
+      // Tambien se anota AQUI, si no el reloj no se reinicia mientras sigue
+      // apuntando: a los 3 s volvia a sonar, a vibrar y a meter otra linea en el
+      // historial. Treinta segundos sobre un paquete eran diez entradas.
+      ultimoT = ahora;
+      return;
+    }
     ultimo = codigo; ultimoT = ahora;
 
     // 1. lo que escribio EL mirando el envase. Va primero: si se tomo la
@@ -1196,7 +1302,16 @@ if ('serviceWorker' in navigator) {
     estado.textContent = 'Buscando ' + codigo + '…';
     var url = 'https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(codigo) +
               '.json?fields=product_name,product_name_es,brands,categories,generic_name,nutriments';
-    fetch(url).then(function (r) {
+    // Sin tiempo maximo, una wifi de supermercado que acepta la conexion y no
+    // contesta dejaba "buscando" en true PARA SIEMPRE: el escaner no volvia a
+    // responder a nada hasta recargar la pagina, con la camara encendida
+    // gastando bateria. Seis segundos es de sobra para una consulta que
+    // normalmente tarda tres decimas.
+    var corta = null, ctrl = null;
+    try { ctrl = new AbortController(); } catch (e) {}
+    if (ctrl) corta = setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, 6000);
+    fetch(url, ctrl ? { signal: ctrl.signal } : undefined).then(function (r) {
+      if (corta) { clearTimeout(corta); corta = null; }
       // OFF devuelve 404 limpio cuando no lo tiene, y una pagina HTML de error
       // cuando esta saturado. Sin distinguirlas, r.json() reventaba y el catch
       // decia "sin conexion", que era mentira y despistaba.
@@ -1220,6 +1335,7 @@ if ('serviceWorker' in navigator) {
       cache[codigo] = p; guardaCache();
       resuelveY(p, codigo);
     }).catch(function (err) {
+      if (corta) { clearTimeout(corta); corta = null; }
       buscando = false;
       estado.textContent = '';
       var caida = err && err.tipo === 'caida';
@@ -1240,6 +1356,10 @@ if ('serviceWorker' in navigator) {
     if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
     video.hidden = true;
     btnCam.textContent = 'Encender la cámara';
+    // Al mirar el WhatsApp o apagarse la pantalla, la camara se suelta. Sin esto
+    // el mensaje se quedaba en "no hace falta tocar nada" con la camara apagada,
+    // y se quedaba apuntando a un envase esperando algo que no iba a pasar.
+    estado.textContent = 'Cámara apagada. Dale a «Encender la cámara» para seguir.';
   };
 
   var bucle = function () {
@@ -1299,12 +1419,24 @@ if ('serviceWorker' in navigator) {
 
   var cargaTess = function (ok, mal) {
     if (window.Tesseract) { ok(); return; }
-    if (tessCargando) return;
+    // Si ya se esta bajando, se avisa en vez de no hacer nada: antes la segunda
+    // pulsacion se descartaba en silencio y parecia que el boton estaba roto.
+    if (tessCargando) {
+      estado.textContent = 'Estoy bajando el lector de etiquetas, un momento…';
+      return;
+    }
     tessCargando = true;
+    estado.textContent = 'Bajando el lector de etiquetas (unos 10 MB, solo la primera vez)…';
     var s = document.createElement('script');
     s.src = TESS;
-    s.onload = function () { tessCargando = false; ok(); };
-    s.onerror = function () { tessCargando = false; mal(); };
+    // Tambien con tiempo maximo: si el servidor acepta la conexion y no contesta,
+    // ni onload ni onerror llegan nunca y se quedaba en "Leyendo la etiqueta…"
+    // para siempre.
+    var corta = setTimeout(function () {
+      if (!window.Tesseract && tessCargando) { tessCargando = false; mal(); }
+    }, 25000);
+    s.onload = function () { clearTimeout(corta); tessCargando = false; ok(); };
+    s.onerror = function () { clearTimeout(corta); tessCargando = false; mal(); };
     document.head.appendChild(s);
   };
 
@@ -1320,34 +1452,64 @@ if ('serviceWorker' in navigator) {
 
   // La ley obliga a que la tabla venga por 100 g, asi que se busca linea a linea.
   //
-  // LO DIFICIL AQUI SON LOS SUBTOTALES. Debajo de las grasas va "de las cuales
-  // saturadas", y debajo de los hidratos "de los cuales azucares". Colar uno de
-  // esos en lugar del total da un veredicto al reves, y con total seguridad.
+  // TRES COSAS QUE PARECEN TONTERIAS Y NO LO SON:
   //
-  // Se han probado tres maneras. La primera saltaba ENTERA cualquier linea que
-  // dijera "de las cuales", y estaba mal: los envases pequenios imprimen
-  // "Grasas 12,5 g de las cuales saturadas 8,2 g" en UN SOLO renglon, y
-  // saltandolo se perdia el total bueno. La segunda cortaba la linea por ahi;
-  // funcionaba, pero la prueba de mutacion demostro que sobraba, porque lo que
-  // de verdad hace el trabajo es el guard de aqui abajo. Se quedo solo el guard:
-  // codigo defensivo que ninguna prueba puede ejercitar es codigo del que nadie
-  // sabe si funciona.
+  // 1. LOS SUBTOTALES. Debajo de las grasas va "de las cuales saturadas", y
+  //    debajo de los hidratos "de los cuales azucares". Colar uno de esos en
+  //    lugar del total da un veredicto al reves, y con total seguridad. Lo para
+  //    el guard de cada expresion (el "(?!...)"), que ademas cubre las
+  //    monoinsaturadas y las poliinsaturadas de los aceites.
+  //
+  // 2. LA DISTANCIA. Antes se exigia que el numero estuviera a menos de 14 o 20
+  //    caracteres del nombre. En las etiquetas grandes, con el nombre a la
+  //    izquierda y el numero a la derecha, hay 27 espacios de por medio y no se
+  //    leia ni la grasa ni la proteina, que son las dos que deciden. Ya no hay
+  //    limite: dentro de un renglon, el numero que va detras del nombre es suyo.
+  //
+  // 3. LAS DOS COLUMNAS. Muchas etiquetas traen "por racion" y "por 100 g" una
+  //    al lado de la otra. Si la racion va primero, coger el primer numero es
+  //    coger la racion, y esto es lo peor de todo: los numeros de una racion son
+  //    coherentes ENTRE ELLOS, asi que la comprobacion de Atwater no se entera y
+  //    el veredicto sale con 30 g como si fueran 100. Se mira la cabecera para
+  //    saber cual es cual, y si la racion va delante se coge el ultimo numero.
   var leeTabla = function (txt) {
     var lineas = txt.replace(/\u00a0/g, ' ').split(/\r?\n/);
     var r = { kcal: null, prot: null, hc: null, grasa: null, fibra: null };
-    var CIFRA = '(\\d+(?:[.,]\\d+)?)';
+
+    var racionPrimero = false;
+    for (var i = 0; i < lineas.length; i++) {
+      var h = lineas[i].toLowerCase();
+      var ir = h.search(/raci[oó]n|porci[oó]n|unidad|envase/);
+      var ic = h.search(/100\s*(g|ml)/);
+      if (ir >= 0 && ic >= 0 && ir < ic) { racionPrimero = true; break; }
+    }
+
+    var elige = function (nums) {
+      if (!nums || !nums.length) return null;
+      return numEs(racionPrimero && nums.length > 1 ? nums[nums.length - 1] : nums[0]);
+    };
+    var trasClave = function (b, reClave) {
+      var m = b.match(reClave);
+      if (!m) return null;
+      return elige(b.slice(m.index + m[0].length).match(/\d+(?:[.,]\d+)?/g));
+    };
+
     lineas.forEach(function (l) {
       var b = l.toLowerCase();
       if (!b) return;
-      var m;
-      if (r.kcal === null && (m = b.match(new RegExp(CIFRA + '\\s*k\\s*cal')))) r.kcal = numEs(m[1]);
-      // El \b no es adorno: sin el, "grasas?" casaba con "grasa" a secas y el
-      // "(?!satur)" miraba a partir de la s, o sea a " saturadas", que no empieza
-      // por "satur". Resultado: "Grasas saturadas 8,2 g" colaba como grasa total.
-      if (r.grasa === null && (m = b.match(new RegExp('grasas?\\b(?!\\s*(?:satur|trans|insatur|mono|poli))\\D{0,14}' + CIFRA)))) r.grasa = numEs(m[1]);
-      if (r.hc === null && (m = b.match(new RegExp('hidratos?\\b(?!\\D{0,20}az[\u00fau]car)\\D{0,20}' + CIFRA)))) r.hc = numEs(m[1]);
-      if (r.prot === null && (m = b.match(new RegExp('prote[\u00edi]nas?\\D{0,14}' + CIFRA)))) r.prot = numEs(m[1]);
-      if (r.fibra === null && (m = b.match(new RegExp('fibra\\D{0,20}' + CIFRA)))) r.fibra = numEs(m[1]);
+      var v;
+      if (r.kcal === null) {
+        var ks = b.match(/\d+(?:[.,]\d+)?(?=\s*k\s*cal)/g);
+        if (ks) r.kcal = elige(ks);
+      }
+      if (r.grasa === null &&
+          (v = trasClave(b, /grasas?\b(?!\s*(?:satur|trans|insatur|mono|poli))/)) !== null) r.grasa = v;
+      if (r.hc === null &&
+          (v = trasClave(b, /hidratos?\b(?!\D{0,40}az[úu]car)/)) !== null) r.hc = v;
+      if (r.prot === null &&
+          (v = trasClave(b, /prote[íi]nas?\b\s*(?:\([^)]*\))?/)) !== null) r.prot = v;
+      if (r.fibra === null &&
+          (v = trasClave(b, /fibra\b/)) !== null) r.fibra = v;
     });
     return r;
   };
@@ -1372,6 +1534,9 @@ if ('serviceWorker' in navigator) {
   };
 
   var procesaFoto = function (fuente) {
+    // Igual que al pedir la etiqueta: si la foto solo saca 3 de los 5 numeros,
+    // los otros dos se quedarian con los del producto anterior.
+    vaciaFormulario();
     estado.textContent = 'Leyendo la etiqueta…';
     cargaTess(function () {
       // Reducir y pasar a gris sube mucho el acierto y baja el tiempo.
@@ -1455,7 +1620,11 @@ if ('serviceWorker' in navigator) {
       prot: num(document.getElementById('mProt').value),
       hc: num(document.getElementById('mHc').value),
       grasa: num(document.getElementById('mGrasa').value),
-      fibra: num(document.getElementById('mFibra').value) || 0,
+      // Sin el "|| 0" a proposito. num('') devuelve null y "null || 0" da 0,
+      // o sea que dejar la casilla vacia AFIRMABA que no tiene fibra: un
+      // brocoli tecleado sin fibra salia "ni entra ni estorba". Y como lo
+      // tecleado no se borra nunca, se quedaba mal para siempre.
+      fibra: num(document.getElementById('mFibra').value),
       fuente: 'mano'
     };
     if (p.kcal === null || p.prot === null) {
@@ -1466,11 +1635,15 @@ if ('serviceWorker' in navigator) {
     var cod = document.getElementById('mCodigo').value.trim();
     // Va a "mano", no a "cache": esto lo ha leido el del envase y no se tira
     // nunca, pase lo que pase con las versiones.
-    if (cod) { mano[cod] = p; guardaMano(); }
+    var guardado = false;
+    if (cod) { mano[cod] = p; guardado = guardaMano(); }
     resuelveY(p, cod);
     if (cod) {
-      estado.textContent = 'Guardado para siempre. La próxima vez que escanees ' +
-                           'ese producto, respuesta inmediata y sin preguntarte nada.';
+      estado.textContent = guardado
+        ? 'Guardado para siempre. La próxima vez que escanees ese producto, ' +
+          'respuesta inmediata y sin preguntarte nada.'
+        : 'OJO: no he podido guardarlo (memoria llena o navegación privada). ' +
+          'Te lo volveré a preguntar.';
     }
   });
 
