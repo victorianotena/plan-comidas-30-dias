@@ -1,7 +1,7 @@
 
 // Servicio que guarda la web en el movil para que funcione sin cobertura.
-var VERSION = 'plan-d3384ab1';
-var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "escanear.html", "coste.html", "nutrientes.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=d3384ab1", "app.js?v=d3384ab1", "plan.json?v=d3384ab1", "escaner.json?v=d3384ab1", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
+var VERSION = 'plan-bf755fb0';
+var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "escanear.html", "coste.html", "nutrientes.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=bf755fb0", "app.js?v=bf755fb0", "plan.json?v=bf755fb0", "escaner.json?v=bf755fb0", "basees.txt?v=bf755fb0", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) {
@@ -34,6 +34,22 @@ self.addEventListener('fetch', function (e) {
   // El video pesa 15 MB: se sirve de la red y no se guarda, o se come la cache
   // que el movil reserva para la app entera.
   if (/\.(mp4|webm|mov)$/i.test(new URL(e.request.url).pathname)) return;
+
+  // La base de productos son 13 MB y solo cambia cuando se regenera la web.
+  // Con la regla normal (red primero) se la volveria a bajar ENTERA cada vez
+  // que abriera el escaner, y comprando eso son megas del movil tirados. Aqui
+  // manda la copia guardada; la version nueva llega al cambiar VERSION, que
+  // borra la cache anterior.
+  if (/\/basees\.txt$/.test(new URL(e.request.url).pathname)) {
+    e.respondWith(caches.match(e.request, { ignoreSearch: true }).then(function (r) {
+      return r || fetch(e.request).then(function (n) {
+        var copia = n.clone();
+        if (n.ok) caches.open(VERSION).then(function (c) { c.put(e.request, copia); });
+        return n;
+      });
+    }));
+    return;
+  }
   e.respondWith(
     fetch(e.request).then(function (r) {
       var copia = r.clone();

@@ -231,7 +231,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=d3384ab1').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=bf755fb0').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -688,16 +688,39 @@ if ('serviceWorker' in navigator) {
   var salida = document.getElementById('veredicto');
   var estado = document.getElementById('estadoEscaner');
   var btnCam = document.getElementById('btnCamara');
+  var btnEtiq = document.getElementById('btnEtiqueta');
+  var fotoEtiq = document.getElementById('fotoEtiqueta');
   var manual = document.getElementById('formManual');
-  var CLAVE_CACHE = 'escaner-cache';     // codigo -> datos del producto
+  // DOS ALMACENES, y la diferencia importa.
+  //
+  // En "cache" va lo que se ha sacado solo de una base de datos. Se puede tirar
+  // sin pena: se vuelve a sacar en un instante.
+  //
+  // En "mano" va lo que ha escrito EL, mirando el envase. Eso no se tira NUNCA.
+  // Se le prometio que un producto se teclea una vez y no se le vuelve a
+  // preguntar, y borrarlo por un cambio interno seria romper esa promesa sin que
+  // se entere.
+  //
+  // Hace falta separarlos porque al cambiar las reglas de clasificacion lo
+  // guardado se queda anticuado: el brocoli seguia saliendo mal despues de
+  // arreglarlo, porque respondia la copia vieja. Ahora la copia automatica se
+  // tira sola cuando cambia la version, y lo suyo se queda.
+  var CLAVE_CACHE = 'escaner-cache';     // sacado de una base: se puede tirar
+  var CLAVE_MANO = 'escaner-mano';       // escrito por el: no se tira nunca
+  var CLAVE_VER = 'escaner-version';
   var CLAVE_HIST = 'escaner-historial';  // lo escaneado, para exportarlo luego
 
   var D = null;                          // datos del plan (escaner.json)
-  var cache = {};
+  var BASE = null;                       // base espanola empaquetada
+  var cache = {}, mano = {};
   try { cache = JSON.parse(localStorage.getItem(CLAVE_CACHE) || '{}'); } catch (e) {}
+  try { mano = JSON.parse(localStorage.getItem(CLAVE_MANO) || '{}'); } catch (e) {}
 
   var guardaCache = function () {
     try { localStorage.setItem(CLAVE_CACHE, JSON.stringify(cache)); } catch (e) {}
+  };
+  var guardaMano = function () {
+    try { localStorage.setItem(CLAVE_MANO, JSON.stringify(mano)); } catch (e) {}
   };
 
   var apunta = function (codigo, prod, ver) {
@@ -707,7 +730,7 @@ if ('serviceWorker' in navigator) {
              nom: prod.nombre, marca: prod.marca || '',
              kcal: prod.kcal, prot: prod.prot, hc: prod.hc,
              grasa: prod.grasa, fibra: prod.fibra,
-             hueco: ver.hueco, veredicto: ver.clase });
+             fuente: prod.fuente || '', hueco: ver.hueco, veredicto: ver.clase });
     // No crece sin limite: 300 productos son mas de un anio de compras.
     if (h.length > 300) h = h.slice(-300);
     try { localStorage.setItem(CLAVE_HIST, JSON.stringify(h)); } catch (e) {}
@@ -725,21 +748,71 @@ if ('serviceWorker' in navigator) {
   };
   var uno = function (x) { return (Math.round(x * 10) / 10).toString().replace('.', ','); };
 
+  // Un mismo producto se escribe de varias formas segun quien lo metiera: con
+  // ceros delante, sin ellos, en UPC de 12 digitos o en EAN de 13. Buscando solo
+  // la forma literal que lee la camara se pierden aciertos que SI estan.
+  var variantes = function (c) {
+    var v = [c], sin = c.replace(/^0+/, '');
+    if (sin && v.indexOf(sin) < 0) v.push(sin);
+    while (sin.length < 14) {
+      sin = '0' + sin;
+      if (v.indexOf(sin) < 0) v.push(sin);
+    }
+    return v;
+  };
+
+  // Los codigos que empiezan por 2 los genera la propia tienda al pesar: no
+  // identifican un producto, identifican ESE paquete. No estan en ninguna base
+  // del mundo y no van a estarlo. Buscarlos es perder el tiempo y acabar
+  // pidiendole que teclee.
+  var esBalanza = function (c) {
+    return /^2\d{6,}$/.test(c) && (c.length === 12 || c.length === 13);
+  };
+
   // ------------------------------------------------------- en que hueco cae
   // Mismas reglas que escaner.py, por macros y no por el nombre: el nombre es
   // justo lo que miente.
   // EL ORDEN IMPORTA, y es el mismo que en escaner.py. Mirando la proteina
   // antes que los hidratos, una pasta de lentejas se clasificaba como fuente de
   // proteina y se comparaba contra el pollo.
+  //
+  // AQUI HAY UNA RAMA DE MAS que en escaner.py, y es a proposito: los alimentos
+  // del plan siempre traen la fibra (se leyo de la etiqueta), pero la base
+  // abierta no la trae en uno de cada cuatro productos. Sin esa rama, cualquier
+  // verdura sin fibra apuntada dejaba de ser verdura.
   var huecoDe = function (p) {
     if (!p.kcal || p.kcal <= 0) return 'otro';
     if (p.prot >= 50) return 'suplemento';
     if (p.hc >= 35) return 'hidrato';
-    if (p.kcal < 80 && p.fibra >= 1.2 && p.prot < 6) return 'verdura';
-    if (p.kcal < 95 && p.hc >= 5 && p.fibra < 3 && p.prot < 3) return 'fruta';
+    // OJO: en JavaScript null se compara como 0, asi que "p.fibra >= 1.2" con la
+    // fibra desconocida da false calladamente. Hay que preguntarlo a mano.
+    var sinFibra = p.fibra === null || p.fibra === undefined;
+    // La FRUTA se mira antes que la verdura. Al reves, cualquier fruta con algo
+    // de fibra y pocas calorias (una manzana) salia clasificada como verdura.
+    // El corte esta en 10 g de hidratos: la cebolla (9) se queda en verdura y la
+    // manzana (12) pasa a fruta. No es una frontera perfecta y no puede serlo
+    // solo con macros, pero los dos huecos dan el MISMO veredicto ("adelante"),
+    // asi que equivocarse entre ellos solo cambia una palabra del texto.
+    if (p.kcal < 80 && p.hc >= 10 && p.prot < 3 && p.grasa < 2 &&
+        (sinFibra || p.fibra < 4)) return 'fruta';
+    // 0,5 y no 1,2, que era el corte original. Lo bajaron dos alimentos DEL PLAN
+    // que se quedaban fuera y acababan en "otro": los champiniones (1,0 g) y el
+    // melon galia (0,9 g). Pero no se puede bajar a 0: el edulcorante y la
+    // sriracha tambien son poco caloricos y sin proteina, y no son verdura.
+    if (p.kcal < 80 && p.prot < 6 &&
+        (sinFibra ? (p.grasa < 3 && p.hc < 12) : p.fibra >= 0.5)) return 'verdura';
     var p100 = p.prot * 400 / p.kcal;
     if (p.prot >= 14 && p100 >= 26) return 'proteina';
-    if (p.prot >= 4 && p.prot < 14 && p.hc <= 12 && p.grasa <= 6 && p.kcal < 130) return 'lacteo';
+    // El "hc >= 2" es lo que separa un lacteo de una clara de huevo. Un lacteo
+    // lleva lactosa (el skyr 4 g, el griego 3,6); la clara lleva 0,7. Sin ese
+    // minimo, las claras salian como lacteo y se comparaban contra los yogures.
+    if (p.prot >= 4 && p.prot < 14 && p.hc >= 2 && p.hc <= 12 && p.grasa <= 6 && p.kcal < 130) return 'lacteo';
+    // Segunda pasada de proteina, DESPUES de descartar el lacteo. Es para el
+    // huevo: el entero tiene 12,6 g y las claras 9,8, los dos por debajo de los
+    // 14 que pide la regla de arriba, y la grasa del entero lo saca de lacteo.
+    // Caian los dos en "otro", o sea sin comparar contra nada, cuando las claras
+    // son la fuente de proteina mas pura del plan (91 g por 100 kcal).
+    if (p.prot >= 9 && p100 >= 26) return 'proteina';
     if (p.grasa >= 30 || p.kcal >= 380) return 'grasa o dulce';
     return 'otro';
   };
@@ -761,7 +834,11 @@ if ('serviceWorker' in navigator) {
       if (r.prot_menor !== undefined && !(p.prot < r.prot_menor)) ok = false;
       if (r.grasa_mayor !== undefined && !(p.grasa > r.grasa_mayor)) ok = false;
       if (r.hc_mayor !== undefined && !(p.hc > r.hc_mayor)) ok = false;
-      if (r.fibra_menor !== undefined && !(p.fibra < r.fibra_menor)) ok = false;
+      if (r.hc_menor !== undefined && !(p.hc < r.hc_menor)) ok = false;
+      // Con la fibra desconocida no se dispara: mas vale no avisar que avisar en
+      // falso, porque un aviso equivocado desprestigia a los demas.
+      if (r.fibra_menor !== undefined &&
+          (p.fibra === null || p.fibra === undefined || !(p.fibra < r.fibra_menor))) ok = false;
       if (ok) out.push(t);
     });
     return out;
@@ -804,8 +881,12 @@ if ('serviceWorker' in navigator) {
         return { clase: 'si', hueco: hueco,
                  titulo: hueco === 'verdura' ? 'Verdura: adelante' : 'Fruta: adelante',
                  texto: 'Cualquier ' + (hueco === 'verdura' ? 'verdura' : 'fruta') +
-                        ' te viene bien. Llevas ' + uno(p.fibra) + ' g de fibra por 100 g, ' +
-                        'y andas justo de fibra varios días.',
+                        ' te viene bien.' +
+                        (p.fibra === null || p.fibra === undefined
+                          ? ' La ficha no dice cuánta fibra lleva, pero andas justo de fibra ' +
+                            'varios días, así que adelante.'
+                          : ' Llevas ' + uno(p.fibra) + ' g de fibra por 100 g, ' +
+                            'y andas justo de fibra varios días.'),
                  trampas: trampas, rivales: [], crit: crit };
       }
       return { clase: 'mirar', hueco: hueco, titulo: 'Ni entra ni estorba',
@@ -827,6 +908,18 @@ if ('serviceWorker' in navigator) {
     var puntuados = rivales.map(function (a) {
       return { a: a, v: valorCriterio(a, crit.campo) };
     }).sort(function (x, y) { return crit.masEsMejor ? y.v - x.v : x.v - y.v; });
+
+    // El dato con el que habria que juzgar no viene en la ficha. Antes esto se
+    // colaba: null se compara como 0, asi que un pan integral sin la fibra
+    // apuntada salia "se queda corto en fibra" sin que nadie hubiera medido nada.
+    if (mio === null || mio === undefined || !isFinite(mio)) {
+      return { clase: 'mirar', hueco: hueco,
+               titulo: 'Falta el dato que decide',
+               texto: 'Para un ' + (D.huecoNom[hueco] || hueco) + ' lo que manda es ' +
+                      crit.texto + ', y la ficha no lo trae. Míralo en el envase y ' +
+                      'escríbelo aquí abajo, que lo resuelvo al momento.',
+               trampas: trampas, rivales: puntuados, crit: crit };
+    }
 
     // La referencia es la MEDIANA de lo que ya usas, no el campeon. Comparando
     // contra el mejor, la ternera picada magra de verdad salia "peor que lo que
@@ -860,6 +953,13 @@ if ('serviceWorker' in navigator) {
   // ------------------------------------------------------------------ pintar
   var ICONO = { si: '✓', no: '✗', igual: '=', mirar: '?' };
   var ETIQ = { si: 'Cómpralo', no: 'Déjalo', igual: 'Da igual', mirar: 'Mira la etiqueta' };
+  var FUENTE = {
+    tuyo: 'ya lo tenías escaneado',
+    local: 'base guardada en el móvil',
+    off: 'Open Food Facts',
+    mano: 'lo escribiste tú',
+    foto: 'leído de la etiqueta'
+  };
 
   var pinta = function (p, v, codigo) {
     var h = [];
@@ -893,6 +993,13 @@ if ('serviceWorker' in navigator) {
              esc(t.texto) + '</div>');
     });
 
+    // Si los numeros los ha leido la camara de la etiqueta, no se dan por buenos
+    // sin mas: se comprueba que cuadren consigo mismos (ver compruebaAtwater).
+    if (p.dudoso) {
+      h.push('<div class="ver-aviso"><strong>Ojo, esto lo he leído yo de la foto.</strong> ' +
+             esc(p.dudoso) + '</div>');
+    }
+
     if (v.rivales && v.rivales.length && v.clase === 'no') {
       var alt = v.rivales.slice(0, 2).map(function (x) {
         var a = x.a || x;
@@ -900,13 +1007,90 @@ if ('serviceWorker' in navigator) {
       });
       h.push('<p class="ver-alt"><strong>En su lugar:</strong> ' + alt.join(' · ') + '</p>');
     }
-    h.push('<p class="ver-cod">Código ' + esc(codigo || 'escrito a mano') + '</p>');
+    h.push('<p class="ver-cod">Código ' + esc(codigo || 'escrito a mano') +
+           (p.fuente && FUENTE[p.fuente] ? ' · ' + FUENTE[p.fuente] : '') + '</p>');
     h.push('</div>');
     salida.innerHTML = h.join('');
     salida.hidden = false;
     salida.scrollIntoView({ block: 'nearest' });
     try { if (navigator.vibrate) navigator.vibrate(v.clase === 'no' ? [90, 60, 90] : 60); }
     catch (e) {}
+  };
+
+  var resuelveY = function (p, codigo) {
+    var v = juzga(p);
+    pinta(p, v, codigo);
+    apunta(codigo || '(a mano)', p, v);
+  };
+
+  // --------------------------------------------------- lo que se compra al peso
+  // Un codigo de balanza no dice QUE es, solo cuanto pesa. Asi que en vez de
+  // buscar en vano se le pregunta, con los productos al peso que ya usa el plan.
+  var pintaPeso = function (codigo) {
+    // Se recorre alPeso, NO alimentos: el orden lo decide escaner.py (mostrador
+    // primero, y dentro de cada grupo lo que mas compra). Filtrando alimentos se
+    // perdia ese orden calladamente y salian por donde cayera.
+    var porClave = {};
+    D.alimentos.forEach(function (a) { porClave[a.clave] = a; });
+    var alPeso = D.alPeso.map(function (c) { return porClave[c]; })
+                         .filter(function (a) { return !!a; });
+    var h = ['<div class="ver ver-mirar">'];
+    h.push('<div class="ver-cab"><span class="ver-ico" aria-hidden="true">⚖</span><div>' +
+           '<p class="ver-et">Pesado en la tienda</p>' +
+           '<p class="ver-tit">Este código no dice qué es</p></div></div>');
+    h.push('<p class="ver-txt">Empieza por 2: se lo ha inventado la balanza del ' +
+           'súper para <em>este</em> paquete. No está en ninguna base de datos, ' +
+           'ni la va a estar. Dime qué estás cogiendo:</p>');
+    h.push('<div class="peso-botones">');
+    alPeso.forEach(function (a) {
+      h.push('<button type="button" class="peso-bot" data-clave="' + esc(a.clave) + '">' +
+             esc(a.nombre) + '</button>');
+    });
+    h.push('</div>');
+    h.push('<p class="ver-cod">Código ' + esc(codigo) + '</p>');
+    h.push('</div>');
+    salida.innerHTML = h.join('');
+    salida.hidden = false;
+    salida.scrollIntoView({ block: 'nearest' });
+    try { if (navigator.vibrate) navigator.vibrate(40); } catch (e) {}
+
+    salida.querySelectorAll('.peso-bot').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var a = D.alimentos.filter(function (x) { return x.clave === b.dataset.clave; })[0];
+        if (a) pintaReferencia(a, codigo);
+      });
+    });
+  };
+
+  // Elegido el producto al peso, lo util no es un veredicto (ya sabemos que
+  // entra en el plan): es que sepa QUE MIRAR en la etiqueta del mostrador.
+  var pintaReferencia = function (a, codigo) {
+    var h = ['<div class="ver ver-si">'];
+    h.push('<div class="ver-cab"><span class="ver-ico" aria-hidden="true">✓</span><div>' +
+           '<p class="ver-et">Del plan</p><p class="ver-tit">' + esc(a.nombre) +
+           '</p></div></div>');
+    var comprueba = [];
+    if (a.hueco === 'proteina') {
+      comprueba.push('que tenga <strong>' + uno(a.prot) + ' g de proteína</strong> o más');
+      if (a.grasa <= 8) comprueba.push('y <strong>' + uno(a.grasa) + ' g de grasa</strong> o menos');
+    }
+    h.push('<p class="ver-txt">' + (comprueba.length
+      ? 'En la etiqueta del mostrador, mira ' + comprueba.join(', ') + '. ' +
+        'Si no viene, pregunta: es lo único que cambia el cálculo.'
+      : 'Entra en el plan tal cual. No hay nada que comprobar.') + '</p>');
+    h.push('<table class="ver-tabla"><tr><th>por 100 g</th><th>kcal</th><th>prot</th>' +
+           '<th>hidr</th><th>grasa</th><th>fibra</th></tr><tr><td>El del plan</td>' +
+           ['kcal', 'prot', 'hc', 'grasa', 'fibra'].map(function (k) {
+             return '<td>' + uno(a[k]) + '</td>';
+           }).join('') + '</tr></table>');
+    if (a.g30) {
+      h.push('<p class="ver-alt"><strong>En los 30 días:</strong> ' +
+             (a.g30 >= 1000 ? uno(a.g30 / 1000) + ' kg' : a.g30 + ' g') +
+             (a.eur_kg ? ' · unos ' + uno(a.eur_kg) + ' €/kg' : '') + '</p>');
+    }
+    h.push('<p class="ver-cod">Código ' + esc(codigo) + '</p></div>');
+    salida.innerHTML = h.join('');
+    salida.scrollIntoView({ block: 'nearest' });
   };
 
   // ------------------------------------------------------- buscar el producto
@@ -919,8 +1103,58 @@ if ('serviceWorker' in navigator) {
       marca: (p.brands || '').split(',')[0].trim(),
       categorias: (p.categories || '') + ' ' + (p.generic_name || ''),
       kcal: kcal, prot: num(n.proteins_100g), hc: num(n.carbohydrates_100g),
-      grasa: num(n.fat_100g), fibra: num(n.fiber_100g) === null ? 0 : num(n.fiber_100g)
+      // La fibra se deja en null si no viene, igual que en la base empaquetada.
+      // Poniendo 0 se estaria afirmando que no tiene, que es otra cosa.
+      grasa: num(n.fat_100g), fibra: num(n.fiber_100g),
+      fuente: 'off'
     };
+  };
+
+  // La base empaquetada NO es un JSON. Son 240.000 lineas de texto:
+  //     codigo|nombre|marca|kcal|proteina|hidratos|grasa|fibra
+  //
+  // En JSON habria que convertirla en 240.000 objetos de JavaScript nada mas
+  // abrir la pagina, y eso son mas de cien megas de memoria: en un movil normal
+  // se cierra la pestania. Como texto se queda en una sola cadena y se busca
+  // dentro con indexOf, que tarda unos milisegundos. Se escanea un producto cada
+  // varios segundos, asi que sobra de largo.
+  var deBase = function (linea) {
+    var f = linea.split('|');
+    // La fibra viene -1 cuando la base no la trae. Se convierte en null: "no lo
+    // se" no es "no tiene", y confundirlos hacia que el brocoli dejara de ser
+    // verdura. Uno de cada cuatro productos viene sin fibra.
+    var fib = parseFloat(f[7]);
+    return { nombre: f[1], marca: f[2], kcal: parseFloat(f[3]), prot: parseFloat(f[4]),
+             hc: parseFloat(f[5]), grasa: parseFloat(f[6]),
+             fibra: fib < 0 ? null : fib,
+             categorias: '', fuente: 'local' };
+  };
+
+  var buscaEnBase = function (codigo) {
+    if (!BASE) return null;
+    var v = variantes(codigo);
+    for (var i = 0; i < v.length; i++) {
+      var j = BASE.indexOf('\n' + v[i] + '|');
+      if (j >= 0) {
+        var fin = BASE.indexOf('\n', j + 1);
+        return deBase(BASE.slice(j + 1, fin < 0 ? BASE.length : fin));
+      }
+    }
+    return null;
+  };
+
+  // Cuando no hay manera, el formulario sale CON EL CODIGO YA PUESTO. Sin eso,
+  // lo que escribia se guardaba con codigo vacio y el mismo producto se lo
+  // volvia a preguntar la siguiente vez, y la siguiente.
+  var pideEtiqueta = function (codigo, et, txt) {
+    salida.innerHTML = '<div class="ver ver-mirar"><div class="ver-cab">' +
+      '<span class="ver-ico" aria-hidden="true">?</span><div>' +
+      '<p class="ver-et">' + esc(et) + '</p>' +
+      '<p class="ver-tit">Código ' + esc(codigo) + '</p></div></div>' +
+      '<p class="ver-txt">' + txt + '</p></div>';
+    salida.hidden = false;
+    document.getElementById('mCodigo').value = codigo;
+    salida.scrollIntoView({ block: 'nearest' });
   };
 
   var buscando = false;
@@ -935,39 +1169,66 @@ if ('serviceWorker' in navigator) {
     if (codigo === ultimo && ahora - ultimoT < 3000) return;
     ultimo = codigo; ultimoT = ahora;
 
-    if (cache[codigo]) {
-      var pc = cache[codigo];
-      pinta(pc, juzga(pc), codigo);
-      apunta(codigo, pc, juzga(pc));
+    // 1. lo que escribio EL mirando el envase. Va primero: si se tomo la
+    // molestia de leer la etiqueta, eso vale mas que cualquier base de datos.
+    var v = variantes(codigo), i;
+    for (i = 0; i < v.length; i++) {
+      if (mano[v[i]]) { resuelveY(mano[v[i]], codigo); return; }
+    }
+    // 2. lo que ya se saco alguna vez de una base
+    for (i = 0; i < v.length; i++) {
+      if (cache[v[i]]) { resuelveY(cache[v[i]], codigo); return; }
+    }
+
+    // 3. codigo de balanza: ni se intenta
+    if (esBalanza(codigo)) { pintaPeso(codigo); return; }
+
+    // 4. la base que lleva el movil encima
+    var local = buscaEnBase(codigo);
+    if (local) {
+      cache[codigo] = local; guardaCache();
+      resuelveY(local, codigo);
       return;
     }
+
+    // 5. Open Food Facts, por si es nuevo
     buscando = true;
     estado.textContent = 'Buscando ' + codigo + '…';
     var url = 'https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(codigo) +
               '.json?fields=product_name,product_name_es,brands,categories,generic_name,nutriments';
-    fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+    fetch(url).then(function (r) {
+      // OFF devuelve 404 limpio cuando no lo tiene, y una pagina HTML de error
+      // cuando esta saturado. Sin distinguirlas, r.json() reventaba y el catch
+      // decia "sin conexion", que era mentira y despistaba.
+      if (r.status === 404) return { status: 0 };
+      if (!r.ok) { var e = new Error('caida'); e.tipo = 'caida'; throw e; }
+      return r.text().then(function (t) {
+        if (t.charAt(0) !== '{') { var e2 = new Error('caida'); e2.tipo = 'caida'; throw e2; }
+        return JSON.parse(t);
+      });
+    }).then(function (j) {
       buscando = false;
+      estado.textContent = '';
       if (!j || j.status === 0 || !j.product) {
-        estado.textContent = '';
-        salida.innerHTML = '<div class="ver ver-mirar"><div class="ver-cab">' +
-          '<span class="ver-ico" aria-hidden="true">?</span><div>' +
-          '<p class="ver-et">No está en la base</p>' +
-          '<p class="ver-tit">Código ' + esc(codigo) + '</p></div></div>' +
-          '<p class="ver-txt">Suele pasar con las marcas blancas. Copia los cinco ' +
-          'números de la tabla del envase aquí abajo y te lo digo igual.</p></div>';
-        salida.hidden = false;
-        document.getElementById('mKcal').focus();
+        pideEtiqueta(codigo, 'No está en ninguna base',
+          'Pasa con una de cada ocho. Cópiame los números de la tabla del envase ' +
+          'aquí abajo —o dale a <strong>Leer la etiqueta</strong> y los saco yo de ' +
+          'una foto— y <strong>no te lo vuelvo a preguntar nunca más</strong>.');
         return;
       }
       var p = deOFF(j);
       cache[codigo] = p; guardaCache();
-      estado.textContent = '';
-      var v = juzga(p);
-      pinta(p, v, codigo);
-      apunta(codigo, p, v);
-    }).catch(function () {
+      resuelveY(p, codigo);
+    }).catch(function (err) {
       buscando = false;
-      estado.textContent = 'Sin conexión. Escribe los números del envase.';
+      estado.textContent = '';
+      var caida = err && err.tipo === 'caida';
+      pideEtiqueta(codigo,
+        caida ? 'La base pública está caída' : (navigator.onLine ? 'No he podido preguntar' : 'Sin conexión'),
+        (caida
+          ? 'No es cosa tuya: Open Food Facts está devolviendo errores ahora mismo. '
+          : 'No hay manera de llegar a internet desde aquí. ') +
+        'Cópiame los números del envase y lo resuelvo igual, sin red.');
     });
   };
 
@@ -1025,35 +1286,236 @@ if ('serviceWorker' in navigator) {
   });
   window.addEventListener('pagehide', pararCamara);
 
+  // ------------------------------------------------- leer la tabla de la foto
+  // Lo pidio desde el primer dia: "o a los codigos de barra o a los valores
+  // nutricionales". Esta es la segunda mitad.
+  //
+  // El reconocimiento de texto no acierta siempre: hay brillos, plasticos
+  // curvados y letra de 6 puntos. Por eso NO decide nada solo: rellena el
+  // formulario, ensenia lo que ha leido y le pide un vistazo. Y si los numeros
+  // no cuadran entre ellos, lo dice.
+  var TESS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+  var tessCargando = false;
+
+  var cargaTess = function (ok, mal) {
+    if (window.Tesseract) { ok(); return; }
+    if (tessCargando) return;
+    tessCargando = true;
+    var s = document.createElement('script');
+    s.src = TESS;
+    s.onload = function () { tessCargando = false; ok(); };
+    s.onerror = function () { tessCargando = false; mal(); };
+    document.head.appendChild(s);
+  };
+
+  // "1.234" son mil doscientos treinta y cuatro; "12,5" son doce y medio. Si se
+  // confunden, el veredicto sale disparatado.
+  var numEs = function (s) {
+    s = String(s).trim();
+    if (s.indexOf(',') >= 0) return parseFloat(s.replace(/\./g, '').replace(',', '.'));
+    var t = s.split('.');
+    if (t.length === 2 && t[1].length <= 2) return parseFloat(s);
+    return parseFloat(s.replace(/\./g, ''));
+  };
+
+  // La ley obliga a que la tabla venga por 100 g, asi que se busca linea a linea.
+  //
+  // LO DIFICIL AQUI SON LOS SUBTOTALES. Debajo de las grasas va "de las cuales
+  // saturadas", y debajo de los hidratos "de los cuales azucares". Colar uno de
+  // esos en lugar del total da un veredicto al reves, y con total seguridad.
+  //
+  // Se han probado tres maneras. La primera saltaba ENTERA cualquier linea que
+  // dijera "de las cuales", y estaba mal: los envases pequenios imprimen
+  // "Grasas 12,5 g de las cuales saturadas 8,2 g" en UN SOLO renglon, y
+  // saltandolo se perdia el total bueno. La segunda cortaba la linea por ahi;
+  // funcionaba, pero la prueba de mutacion demostro que sobraba, porque lo que
+  // de verdad hace el trabajo es el guard de aqui abajo. Se quedo solo el guard:
+  // codigo defensivo que ninguna prueba puede ejercitar es codigo del que nadie
+  // sabe si funciona.
+  var leeTabla = function (txt) {
+    var lineas = txt.replace(/\u00a0/g, ' ').split(/\r?\n/);
+    var r = { kcal: null, prot: null, hc: null, grasa: null, fibra: null };
+    var CIFRA = '(\\d+(?:[.,]\\d+)?)';
+    lineas.forEach(function (l) {
+      var b = l.toLowerCase();
+      if (!b) return;
+      var m;
+      if (r.kcal === null && (m = b.match(new RegExp(CIFRA + '\\s*k\\s*cal')))) r.kcal = numEs(m[1]);
+      // El \b no es adorno: sin el, "grasas?" casaba con "grasa" a secas y el
+      // "(?!satur)" miraba a partir de la s, o sea a " saturadas", que no empieza
+      // por "satur". Resultado: "Grasas saturadas 8,2 g" colaba como grasa total.
+      if (r.grasa === null && (m = b.match(new RegExp('grasas?\\b(?!\\s*(?:satur|trans|insatur|mono|poli))\\D{0,14}' + CIFRA)))) r.grasa = numEs(m[1]);
+      if (r.hc === null && (m = b.match(new RegExp('hidratos?\\b(?!\\D{0,20}az[\u00fau]car)\\D{0,20}' + CIFRA)))) r.hc = numEs(m[1]);
+      if (r.prot === null && (m = b.match(new RegExp('prote[\u00edi]nas?\\D{0,14}' + CIFRA)))) r.prot = numEs(m[1]);
+      if (r.fibra === null && (m = b.match(new RegExp('fibra\\D{0,20}' + CIFRA)))) r.fibra = numEs(m[1]);
+    });
+    return r;
+  };
+
+  // Las calorias declaradas tienen que parecerse a lo que suman los macros. Es
+  // la misma comprobacion que usa el proyecto entero para las etiquetas, y aqui
+  // sirve para pillar un numero mal leido antes de dar un veredicto con el.
+  var compruebaAtwater = function (p) {
+    if (p.kcal == null || p.prot == null || p.hc == null || p.grasa == null) return null;
+    var calc = p.prot * 4 + p.hc * 4 + p.grasa * 9 + (p.fibra || 0) * 2;
+    if (!calc) return null;
+    var desv = Math.abs(calc - p.kcal) / Math.max(p.kcal, calc);
+    if (desv <= 0.25) return null;
+    return 'Los macros suman ' + Math.round(calc) + ' kcal pero la etiqueta pone ' +
+           Math.round(p.kcal) + '. Algún número lo habré leído mal: compruébalo antes de fiarte.';
+  };
+
+  var pon = function (id, v) {
+    if (v !== null && v !== undefined && isFinite(v)) {
+      document.getElementById(id).value = uno(v);
+    }
+  };
+
+  var procesaFoto = function (fuente) {
+    estado.textContent = 'Leyendo la etiqueta…';
+    cargaTess(function () {
+      // Reducir y pasar a gris sube mucho el acierto y baja el tiempo.
+      var c = document.createElement('canvas');
+      var an = fuente.videoWidth || fuente.naturalWidth || fuente.width;
+      var al = fuente.videoHeight || fuente.naturalHeight || fuente.height;
+      if (!an || !al) { estado.textContent = 'No he podido coger la imagen.'; return; }
+      var k = Math.min(1, 1600 / an);
+      c.width = Math.round(an * k); c.height = Math.round(al * k);
+      var g = c.getContext('2d');
+      g.drawImage(fuente, 0, 0, c.width, c.height);
+      var d = g.getImageData(0, 0, c.width, c.height), a = d.data;
+      for (var i = 0; i < a.length; i += 4) {
+        var y = 0.299 * a[i] + 0.587 * a[i + 1] + 0.114 * a[i + 2];
+        y = y < 128 ? y * 0.6 : 255 - (255 - y) * 0.6;   // mas contraste
+        a[i] = a[i + 1] = a[i + 2] = y;
+      }
+      g.putImageData(d, 0, 0);
+
+      window.Tesseract.recognize(c, 'spa').then(function (res) {
+        var t = (res && res.data && res.data.text) || '';
+        var r = leeTabla(t);
+        var leidos = ['kcal', 'prot', 'hc', 'grasa', 'fibra'].filter(function (k2) {
+          return r[k2] !== null;
+        });
+        estado.textContent = '';
+        if (leidos.length < 2) {
+          salida.innerHTML = '<div class="ver ver-mirar"><div class="ver-cab">' +
+            '<span class="ver-ico" aria-hidden="true">?</span><div>' +
+            '<p class="ver-et">No he sacado la tabla</p>' +
+            '<p class="ver-tit">Prueba otra vez</p></div></div>' +
+            '<p class="ver-txt">Acerca más, que se vea solo la tabla y sin brillos. ' +
+            'Si no hay manera, escríbelos abajo: son cinco números.</p></div>';
+          salida.hidden = false;
+          return;
+        }
+        pon('mKcal', r.kcal); pon('mProt', r.prot); pon('mHc', r.hc);
+        pon('mGrasa', r.grasa); pon('mFibra', r.fibra);
+        salida.innerHTML = '<div class="ver ver-mirar"><div class="ver-cab">' +
+          '<span class="ver-ico" aria-hidden="true">👁</span><div>' +
+          '<p class="ver-et">He leído esto</p><p class="ver-tit">' +
+          leidos.length + ' de 5 números</p></div></div>' +
+          '<p class="ver-txt">Míralos un segundo ahí abajo y dale a <strong>Dime si ' +
+          'me lo llevo</strong>. Corrige el que esté mal.</p></div>';
+        salida.hidden = false;
+        document.getElementById('mKcal').scrollIntoView({ block: 'center' });
+      }).catch(function () {
+        estado.textContent = 'No he podido leer la foto. Escribe los números abajo.';
+      });
+    }, function () {
+      estado.textContent = 'No he podido cargar el lector de etiquetas (necesita ' +
+                           'internet la primera vez). Escribe los números abajo.';
+    });
+  };
+
+  if (btnEtiq) {
+    btnEtiq.addEventListener('click', function () {
+      // Con la camara ya abierta se coge el fotograma y no se molesta al usuario.
+      if (corriendo && video.videoWidth) { procesaFoto(video); return; }
+      fotoEtiq.click();
+    });
+  }
+  if (fotoEtiq) {
+    fotoEtiq.addEventListener('change', function () {
+      var f = fotoEtiq.files && fotoEtiq.files[0];
+      if (!f) return;
+      var img = new Image();
+      img.onload = function () { procesaFoto(img); URL.revokeObjectURL(img.src); };
+      img.src = URL.createObjectURL(f);
+    });
+  }
+
   // --------------------------------------------------------- entrada a mano
   manual.addEventListener('submit', function (e) {
     e.preventDefault();
+    var nom = document.getElementById('mNombre').value;
     var p = {
-      nombre: document.getElementById('mNombre').value || 'Producto sin nombre',
-      marca: '', categorias: document.getElementById('mNombre').value || '',
+      nombre: nom || 'Producto sin nombre',
+      marca: '', categorias: nom || '',
       kcal: num(document.getElementById('mKcal').value),
       prot: num(document.getElementById('mProt').value),
       hc: num(document.getElementById('mHc').value),
       grasa: num(document.getElementById('mGrasa').value),
-      fibra: num(document.getElementById('mFibra').value) || 0
+      fibra: num(document.getElementById('mFibra').value) || 0,
+      fuente: 'mano'
     };
     if (p.kcal === null || p.prot === null) {
       estado.textContent = 'Hacen falta al menos las calorías y la proteína.';
       return;
     }
+    p.dudoso = compruebaAtwater(p);
     var cod = document.getElementById('mCodigo').value.trim();
-    if (cod) { cache[cod] = p; guardaCache(); }
-    var v = juzga(p);
-    pinta(p, v, cod);
-    apunta(cod || '(a mano)', p, v);
+    // Va a "mano", no a "cache": esto lo ha leido el del envase y no se tira
+    // nunca, pase lo que pase con las versiones.
+    if (cod) { mano[cod] = p; guardaMano(); }
+    resuelveY(p, cod);
+    if (cod) {
+      estado.textContent = 'Guardado para siempre. La próxima vez que escanees ' +
+                           'ese producto, respuesta inmediata y sin preguntarte nada.';
+    }
   });
 
   // ------------------------------------------------------------------ datos
-  fetch('escaner.json').then(function (r) { return r.json(); }).then(function (j) {
-    D = j;
+  var listo = function () {
     estado.textContent = '';
     btnCam.disabled = false;
+    if (btnEtiq) btnEtiq.disabled = false;
     document.getElementById('escanerCargando').hidden = true;
+  };
+
+  fetch('escaner.json').then(function (r) { return r.json(); }).then(function (j) {
+    D = j;
+    // Si han cambiado las reglas o la base, lo sacado automaticamente se tira:
+    // se volvera a sacar al momento y ya con las reglas nuevas. Lo que escribio
+    // el a mano NI SE TOCA.
+    try {
+      if (j.version && localStorage.getItem(CLAVE_VER) !== j.version) {
+        cache = {};
+        localStorage.removeItem(CLAVE_CACHE);
+        localStorage.setItem(CLAVE_VER, j.version);
+      }
+    } catch (e) {}
+    listo();
+    // La base espanola se trae despues y sin bloquear: la pagina ya funciona
+    // sin ella (busca en Open Food Facts), y con ella deja de necesitar internet.
+    var n = document.getElementById('estadoBase');
+    if (n) n.textContent = 'Bajando la base de productos…';
+    fetch('basees.txt').then(function (r) {
+      if (!r.ok) throw new Error('no');
+      return r.text();
+    }).then(function (b) {
+      BASE = b;
+      var cuantos = 0, k = -1;
+      while ((k = b.indexOf('\n', k + 1)) >= 0) cuantos++;
+      if (n) {
+        n.textContent = Math.max(0, cuantos - 1).toLocaleString('es-ES') +
+          ' productos españoles guardados en el móvil. Ya funciona sin cobertura.';
+      }
+    }).catch(function () {
+      if (n) {
+        n.textContent = 'No he podido bajar la base de productos. El escáner ' +
+                        'funciona igual, pero necesitará cobertura.';
+      }
+    });
   }).catch(function () {
     estado.textContent = 'No se han podido cargar los datos del plan. ' +
                          'Abre la página con conexión al menos una vez.';

@@ -8,8 +8,8 @@
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#5E2740">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1211">
 <title>Escanear · Plan de comidas</title>
-<link rel="stylesheet" href="estilo.css?v=d3384ab1">
-<link rel="manifest" href="manifest.json?v=d3384ab1">
+<link rel="stylesheet" href="estilo.css?v=bf755fb0">
+<link rel="manifest" href="manifest.json?v=bf755fb0">
 <link rel="icon" href="favicon.png" sizes="64x64">
 <link rel="apple-touch-icon" href="icono-apple.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -35,14 +35,17 @@
 <p class="entrada">Apunta con la cámara al código de barras y te digo si encaja en tu plan. <strong>No hace falta tocar nada</strong>: lee sola, vibra y te lo dice. Apuntas al siguiente y ya.</p>
 <div id="escaner">
 <p id="escanerCargando" class="entrada">Cargando los datos del plan…</p>
-<div class="escaner-barra"><button type="button" class="enlace-video" id="btnCamara" disabled style="border:none;cursor:pointer">Encender la cámara</button><p id="estadoEscaner" role="status" aria-live="polite"></p></div>
+<div class="escaner-barra"><button type="button" class="enlace-video" id="btnCamara" disabled style="border:none;cursor:pointer">Encender la cámara</button><button type="button" class="enlace-video" id="btnEtiqueta" disabled style="border:none;cursor:pointer">Leer la etiqueta</button><p id="estadoEscaner" role="status" aria-live="polite"></p></div>
+<input type="file" id="fotoEtiqueta" accept="image/*" capture="environment" hidden>
 <div class="escaner-caja"><video id="camara" playsinline muted hidden></video></div>
 <div id="veredicto" role="status" aria-live="polite" hidden></div>
+<p id="estadoBase" class="nota-base"></p>
 <h2>Si no lo lee, o no está en la base</h2>
-<p>Pasa sobre todo con marcas blancas. Copia los números de la tabla del envase —los de <strong>por 100 gramos</strong>, no los de la ración— y te lo digo igual.</p>
+<p>Pasa con uno de cada ocho, sobre todo con marcas blancas. Tienes dos salidas: <strong>Leer la etiqueta</strong>, que saca los números de una foto de la tabla, o copiarlos tú aquí abajo. Los de <strong>por 100 gramos</strong>, no los de la ración.</p>
+<p>Sea como sea, <strong>solo hay que hacerlo una vez por producto</strong>: queda guardado con su código de barras y la próxima vez es instantáneo.</p>
 <form id="formManual" class="tarjeta">
 <div class="form-escaner"><div class="campo"><label for="mNombre">Qué es</label><input type="text" id="mNombre" placeholder="Yogur griego natural"></div><div class="campo"><label for="mCodigo">Código (si lo ves)</label><input type="text" id="mCodigo" inputmode="numeric" placeholder="8410000000000"></div><div class="campo"><label for="mKcal">Calorías</label><input type="text" id="mKcal" inputmode="decimal" placeholder="58" required></div><div class="campo"><label for="mProt">Proteínas</label><input type="text" id="mProt" inputmode="decimal" placeholder="6" required></div><div class="campo"><label for="mHc">Hidratos</label><input type="text" id="mHc" inputmode="decimal" placeholder="4"></div><div class="campo"><label for="mGrasa">Grasas</label><input type="text" id="mGrasa" inputmode="decimal" placeholder="2"></div><div class="campo"><label for="mFibra">Fibra</label><input type="text" id="mFibra" inputmode="decimal" placeholder="0"></div></div>
-<button type="submit" class="enlace-video" style="border:none;cursor:pointer;margin-top:14px">Dime si me sirve</button>
+<button type="submit" class="enlace-video" style="border:none;cursor:pointer;margin-top:14px">Dime si me lo llevo</button>
 </form>
 </div>
 <h2>Qué mira exactamente</h2>
@@ -60,6 +63,6 @@
   ingrediente a ingrediente.</p>
 </footer>
 <button type="button" class="arriba" id="btnArriba" aria-label="Volver arriba">&#8593;</button>
-<script src="app.js?v=d3384ab1"></script>
+<script src="app.js?v=bf755fb0"></script>
 </body>
 </html>
