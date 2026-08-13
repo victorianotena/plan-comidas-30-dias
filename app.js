@@ -231,7 +231,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=e034fbe1').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=b5c6c9f0').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -1672,7 +1672,11 @@ if ('serviceWorker' in navigator) {
     // sin ella (busca en Open Food Facts), y con ella deja de necesitar internet.
     var n = document.getElementById('estadoBase');
     if (n) n.textContent = 'Bajando la base de productos…';
-    fetch('basees.txt').then(function (r) {
+    // Con el sello en la direccion. Sin el, el navegador puede servir la copia
+    // que tenga guardada: se vio en una prueba contra la web publicada, donde
+    // decia 238.791 productos cuando el fichero ya tenia 217.671. Asi la base y
+    // las reglas que la interpretan van siempre a la par.
+    fetch('basees.txt' + (j.version ? '?v=' + j.version : '')).then(function (r) {
       if (!r.ok) throw new Error('no');
       return r.text();
     }).then(function (b) {
