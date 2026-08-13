@@ -1,0 +1,9 @@
+# Nada de esto pertenece al sitio publicado.
+__pycache__/
+*.pyc
+*.log
+*.tmp
+*.bak
+*.respaldo-prueba
+.DS_Store
+Thumbs.db

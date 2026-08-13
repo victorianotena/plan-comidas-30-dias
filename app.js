@@ -231,7 +231,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=ee1e9bf4').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=3aa06667').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -247,7 +247,26 @@
 
   var guardar = function () {
     datos.sort(function (a, b) { return a.f < b.f ? -1 : 1; });
-    try { localStorage.setItem(CLAVE, JSON.stringify(datos)); } catch (e) {}
+    // Si el navegador no puede guardar (modo privado, memoria llena), hay que
+    // DECIRLO. El catch vacio dejaba el peso en la tabla y en la grafica, asi
+    // que parecia apuntado; al recargar no estaba y no habia forma de saber por
+    // que. Aqui no vale el silencio: es el unico dato que aporta el usuario.
+    try {
+      localStorage.setItem(CLAVE, JSON.stringify(datos));
+      return true;
+    } catch (e) {
+      var caja = document.getElementById('resumenPeso');
+      if (caja) {
+        caja.insertAdjacentHTML('afterbegin',
+          '<div class="aviso atencion"><span class="et">No se ha podido guardar</span>' +
+          '<p>Este peso se ve ahora en la pantalla, pero <strong>no se ha guardado</strong>: ' +
+          'al cerrar la página se pierde. Suele pasar en modo incógnito o cuando el ' +
+          'navegador tiene la memoria llena.</p>' +
+          '<p>Apúntalo en otro sitio de momento, o abre la página fuera del modo ' +
+          'incógnito.</p></div>');
+      }
+      return false;
+    }
   };
 
   var fmt = function (iso) {
