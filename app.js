@@ -231,7 +231,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=847a9705').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=ee1e9bf4').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -306,19 +306,48 @@
     var caja = document.getElementById('resumenPeso');
     if (datos.length < 2) { caja.innerHTML = ''; return; }
     var a = datos[0], b = datos[datos.length - 1];
-    var dias = Math.max(1, (new Date(b.f) - new Date(a.f)) / 86400000);
+    var dias = (new Date(b.f) - new Date(a.f)) / 86400000;
     var dif = b.p - a.p;
+
+    // MINIMO 10 DIAS antes de proyectar un ritmo semanal. Con dos pesos en dias
+    // seguidos salia "-3,50 kg por semana" y un aviso de ir al medico, en una
+    // pagina que dos parrafos antes avisa de que el peso diario baila por el
+    // agua. Multiplicar ese baile por 7 es fabricar una alarma.
+    var MIN_DIAS = 10;
+    if (dias < MIN_DIAS) {
+      caja.innerHTML =
+        '<dl class="datos"><div><dt>Peso inicial</dt><dd>' + kg(a.p) + '</dd></div>' +
+        '<div><dt>Peso actual</dt><dd>' + kg(b.p) + '</dd></div>' +
+        '<div><dt>Diferencia</dt><dd>' + (dif > 0 ? '+' : '') + kg(dif) + '</dd></div>' +
+        '<div><dt>Pesos apuntados</dt><dd>' + datos.length + '</dd></div>' +
+        '<div><dt>Días entre el primero y el último</dt><dd>' + Math.round(dias) + '</dd></div></dl>' +
+        '<div class="aviso"><span class="et">Todavía es pronto</span>' +
+        '<p>Con menos de ' + MIN_DIAS + ' días entre el primer peso y el último no se puede ' +
+        'sacar un ritmo semanal que signifique nada: el peso sube y baja un kilo largo ' +
+        'solo por el agua y por lo que tengas en el estómago.</p>' +
+        '<p>Sigue apuntándote una o dos veces por semana. En cuanto haya ' + MIN_DIAS +
+        ' días, esto te dirá si vas al ritmo previsto.</p></div>';
+      return;
+    }
+
     var sem = dif / (dias / 7);
+    // Se juzga con el MISMO numero que se enseña. Comparando el decimal sin
+    // redondear contra el umbral, -1,10 kg/semana mandaba "habla con tu medico"
+    // en un caso y "vas bien" en otro, con la misma cifra en pantalla.
+    var semMostrado = Math.round(sem * 100) / 100;
     var juicio, clase;
-    if (sem > -0.3) { juicio = 'Vas más lento de lo previsto. Revisa que las cantidades sean las del plan.'; clase = 'atencion'; }
-    else if (sem >= -1.1) { juicio = 'Vas al ritmo previsto.'; clase = ''; }
+    if (semMostrado > -0.3) { juicio = 'Vas más lento de lo previsto. Revisa que las cantidades sean las del plan.'; clase = 'atencion'; }
+    else if (semMostrado >= -1.1) { juicio = 'Vas al ritmo previsto.'; clase = ''; }
     else { juicio = 'Estás perdiendo más rápido de lo previsto. Conviene subir las calorías y comentarlo con tu médico.'; clase = 'atencion'; }
     caja.innerHTML =
       '<dl class="datos"><div><dt>Peso inicial</dt><dd>' + kg(a.p) + '</dd></div>' +
       '<div><dt>Peso actual</dt><dd>' + kg(b.p) + '</dd></div>' +
       '<div><dt>Diferencia</dt><dd>' + (dif > 0 ? '+' : '') + kg(dif) + '</dd></div>' +
-      '<div><dt>Por semana</dt><dd>' + sem.toFixed(2).replace('.', ',') + ' kg</dd></div>' +
-      '<div><dt>Días registrados</dt><dd>' + Math.round(dias) + '</dd></div></dl>' +
+      // El signo tambien aqui: sin el, subir 1,4 kg y bajar 1,4 kg se imprimian igual.
+      '<div><dt>Por semana</dt><dd>' + (semMostrado > 0 ? '+' : '') +
+      semMostrado.toFixed(2).replace('.', ',') + ' kg</dd></div>' +
+      '<div><dt>Pesos apuntados</dt><dd>' + datos.length + '</dd></div>' +
+      '<div><dt>Días entre el primero y el último</dt><dd>' + Math.round(dias) + '</dd></div></dl>' +
       '<div class="aviso ' + clase + '"><span class="et">Cómo va</span><p>' + juicio + '</p>' +
       '<p>El plan prevé perder alrededor de <strong>1 kg por semana</strong>. ' +
       'La línea de puntos de la gráfica es ese ritmo.</p></div>';
@@ -332,7 +361,19 @@
     }).join('') || '<tr><td colspan="3">Todavía no hay ningún peso apuntado.</td></tr>';
     tb.querySelectorAll('.btn-borrar').forEach(function (b) {
       b.addEventListener('click', function () {
-        datos.splice(parseInt(b.dataset.i, 10), 1); guardar(); todo();
+        // Este boton tambien pregunta. No lo hacia, y borra sin vuelta atras:
+        // si le das al primero, "Peso inicial", "Diferencia" y "Por semana"
+        // salen todos de esa fila y se reescriben enteros sin avisar.
+        var i = parseInt(b.dataset.i, 10);
+        var d = datos[i];
+        if (!d) { return; }
+        var aviso = 'Se va a borrar el peso de ' + fmt(d.f) + ' (' + kg(d.p) + ').';
+        if (i === 0 && datos.length > 1) {
+          aviso += '\n\nEs el primero, del que salen "Peso inicial", "Diferencia" y ' +
+                   '"Por semana": todas esas cifras van a cambiar.';
+        }
+        if (!confirm(aviso + '\n\n¿Seguro?')) { return; }
+        datos.splice(i, 1); guardar(); todo();
       });
     });
   };
@@ -483,7 +524,10 @@
       if (fuera.length) {
         // Aviso en rojo aunque algo haya entrado: lo que falta se ha perdido y
         // hay que enterarse ahora, no dentro de dos semanas.
-        decir('Ha vuelto ' + lista(entran) + ', pero ' + lista(fuera) + ' no: esa parte de la '
+        // Concordancia: "Ha vuelto los pesos apuntados" chirria. Si vuelve mas
+        // de una cosa, el verbo va en plural.
+        decir((entran.length > 1 ? 'Han vuelto ' : 'Ha vuelto ') + lista(entran)
+            + ', pero ' + lista(fuera) + (fuera.length > 1 ? ' no: esas partes de la ' : ' no: esa parte de la ')
             + 'copia estaba estropeada. Se recarga la página en un momento…', true);
       } else {
         decir('Restaurado ' + lista(entran) + '. La página se recarga sola en un momento…');

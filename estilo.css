@@ -96,7 +96,7 @@ main a:focus-visible{ outline:3px solid var(--acento); outline-offset:2px; borde
   padding-bottom:12px; border-bottom:2px solid var(--linea); }
 .chapa{ background:var(--acento); color:var(--papel); font-weight:700; font-size:15px;
   padding:6px 12px; border-radius:8px; white-space:nowrap; }
-.etiqueta{ font-size:14px; letter-spacing:.08em; text-transform:uppercase; font-weight:700;
+.etiqueta{ font-size:16px; letter-spacing:.08em; text-transform:uppercase; font-weight:700;
   color:var(--suave); margin:16px 0 6px; }
 ul.lista{ list-style:none; margin:0; padding:0; }
 ul.lista li{ display:flex; justify-content:space-between; gap:16px; padding:8px 0;
@@ -267,10 +267,12 @@ a.ir-receta:focus-visible{ outline:3px solid var(--acento); outline-offset:2px; 
 :target{ scroll-margin-top:var(--alto-cab) }
 
 /* ---- volver arriba ---- */
-.arriba{ position:fixed; right:18px; bottom:18px; width:56px; height:56px; border-radius:50%;
+/* visibility:hidden ademas de opacity:0: sin ella el boton sigue en el orden
+   de tabulacion y el foco de teclado aterriza en algo que no se ve. */
+.arriba{ visibility:hidden; position:fixed; right:18px; bottom:18px; width:56px; height:56px; border-radius:50%;
   background:var(--acento); color:var(--papel); border:none; font-size:26px; cursor:pointer;
   box-shadow:var(--sombra); opacity:0; pointer-events:none; transition:opacity .2s; z-index:40; }
-.arriba.visible{ opacity:1; pointer-events:auto }
+.arriba.visible{ visibility:visible; opacity:1; pointer-events:auto }
 .arriba:focus-visible{ outline:3px solid var(--tinta); outline-offset:3px }
 
 /* ---- bloques plegables ---- */
