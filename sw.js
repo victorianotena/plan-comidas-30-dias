@@ -1,6 +1,6 @@
 
 // Servicio que guarda la web en el movil para que funcione sin cobertura.
-var VERSION = 'plan-4cc5afef';
+var VERSION = 'plan-794ea61b';
 // La base de productos tiene SU PROPIA cache, con un nombre que solo depende de
 // lo que hay dentro de basees.txt. Antes se guardaba en la de VERSION, y como
 // VERSION cambia con cualquier cambio del codigo —hasta un comentario—, cada
@@ -10,7 +10,7 @@ var VERSION = 'plan-4cc5afef';
 //   - la base cambia      -> CACHE_BASE cambia: se baja la nueva, y la vieja la
 //                            borra la limpieza de abajo por tener otro nombre
 var CACHE_BASE = 'plan-base-7de0dffd';
-var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "escanear.html", "coste.html", "nutrientes.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=4cc5afef", "app.js?v=4cc5afef", "plan.json?v=4cc5afef", "escaner.json?v=4cc5afef", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
+var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "escanear.html", "coste.html", "nutrientes.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=794ea61b", "app.js?v=794ea61b", "plan.json?v=794ea61b", "escaner.json?v=794ea61b", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) {
