@@ -1,0 +1,16 @@
+# Los finales de línea se quedan como están (LF), en Windows también.
+#
+# El repo del proyecto lleva esta misma línea desde el principio. Aquí faltaba, y
+# ahora importa: el service worker guarda basees.txt en una caja que se llama
+# `plan-base-<md5 del fichero>`, así que el md5 de la base es un dato con
+# consecuencias. Medido: sin esta línea, un `git clone` en Windows deja
+# basees.txt en 13.187.955 bytes en vez de 12.970.283, porque git le mete un \r
+# por línea. Mismo contenido, md5 distinto, y la comprobación que ata el nombre
+# de la caja al fichero se pone en rojo sin que nadie haya roto nada.
+* text=auto eol=lf
+
+# Binarios: que git ni los mire por dentro ni intente hacer diffs de ellos.
+*.jpg  binary
+*.jpeg binary
+*.png  binary
+*.mp4  binary
