@@ -1,7 +1,16 @@
 
 // Servicio que guarda la web en el movil para que funcione sin cobertura.
-var VERSION = 'plan-f94fc034';
-var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "escanear.html", "coste.html", "nutrientes.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=f94fc034", "app.js?v=f94fc034", "plan.json?v=f94fc034", "escaner.json?v=f94fc034", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
+var VERSION = 'plan-4cc5afef';
+// La base de productos tiene SU PROPIA cache, con un nombre que solo depende de
+// lo que hay dentro de basees.txt. Antes se guardaba en la de VERSION, y como
+// VERSION cambia con cualquier cambio del codigo —hasta un comentario—, cada
+// publicacion borraba la cache entera y con ella la base: 12,4 MB de datos
+// moviles a cada persona, para volver a bajar el mismo fichero. Separandola:
+//   - publicacion normal  -> VERSION cambia, CACHE_BASE no: la base se queda
+//   - la base cambia      -> CACHE_BASE cambia: se baja la nueva, y la vieja la
+//                            borra la limpieza de abajo por tener otro nombre
+var CACHE_BASE = 'plan-base-7de0dffd';
+var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "escanear.html", "coste.html", "nutrientes.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=4cc5afef", "app.js?v=4cc5afef", "plan.json?v=4cc5afef", "escaner.json?v=4cc5afef", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) {
@@ -22,7 +31,10 @@ self.addEventListener('install', function (e) {
 
 self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (claves) {
-    return Promise.all(claves.filter(function (k) { return k !== VERSION; })
+    // CACHE_BASE se salva de la quema. Es TODO el arreglo: si se borrara aqui,
+    // separarla del resto no habria servido de nada. Cuando la base cambie de
+    // verdad, la de antes tendra otro nombre y esta misma linea la borrara.
+    return Promise.all(claves.filter(function (k) { return k !== VERSION && k !== CACHE_BASE; })
                              .map(function (k) { return caches.delete(k); }));
   }).then(function () { return self.clients.claim(); }));
 });
@@ -35,17 +47,23 @@ self.addEventListener('fetch', function (e) {
   // que el movil reserva para la app entera.
   if (/\.(mp4|webm|mov)$/i.test(new URL(e.request.url).pathname)) return;
 
-  // La base de productos son 13 MB y solo cambia cuando se regenera la web.
-  // Con la regla normal (red primero) se la volveria a bajar ENTERA cada vez
-  // que abriera el escaner, y comprando eso son megas del movil tirados. Aqui
-  // manda la copia guardada; la version nueva llega al cambiar VERSION, que
-  // borra la cache anterior.
+  // La base de productos son 12,4 MB y solo cambia cuando se regenera con
+  // baja_base.py. Con la regla normal (red primero) se la volveria a bajar
+  // ENTERA cada vez que se abriera el escaner, y comprando eso son megas del
+  // movil tirados. Aqui manda la copia guardada; la version nueva llega al
+  // cambiar CACHE_BASE, que deja la copia anterior sin nadie que la busque.
+  //
+  // Se mira DENTRO de CACHE_BASE, no con caches.match a secas: ese busca en
+  // TODAS las caches, asi que en el rato entre instalar la version nueva y
+  // activarla podria devolver la base vieja, que es justo lo que no se quiere
+  // el dia en que la base cambia.
   if (/\/basees\.txt$/.test(new URL(e.request.url).pathname)) {
-    e.respondWith(caches.match(e.request, { ignoreSearch: true }).then(function (r) {
-      return r || fetch(e.request).then(function (n) {
-        var copia = n.clone();
-        if (n.ok) caches.open(VERSION).then(function (c) { c.put(e.request, copia); });
-        return n;
+    e.respondWith(caches.open(CACHE_BASE).then(function (c) {
+      return c.match(e.request, { ignoreSearch: true }).then(function (r) {
+        return r || fetch(e.request).then(function (n) {
+          if (n.ok) c.put(e.request, n.clone());
+          return n;
+        });
       });
     }));
     return;

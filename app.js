@@ -231,7 +231,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=f94fc034').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=4cc5afef').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -1723,9 +1723,14 @@ if ('serviceWorker' in navigator) {
     conCache(function () {
     // Con el sello en la direccion. Sin el, el navegador puede servir la copia
     // que tenga guardada: se vio en una prueba contra la web publicada, donde
-    // decia 238.791 productos cuando el fichero ya tenia 217.671. Asi la base y
-    // las reglas que la interpretan van siempre a la par.
-    fetch('basees.txt' + (j.version ? '?v=' + j.version : '')).then(function (r) {
+    // decia 238.791 productos cuando el fichero ya tenia 217.671.
+    //
+    // El sello es el DE LA BASE (version_base), no el general. El general
+    // cambia con cualquier cambio del codigo, y una direccion nueva son 12,4 MB
+    // nuevos para quien no tenga service worker todavia. El de la base solo
+    // cambia cuando cambia el fichero, que es cuando hay algo que bajar.
+    var selloBase = j.version_base || j.version;
+    fetch('basees.txt' + (selloBase ? '?v=' + selloBase : '')).then(function (r) {
       if (!r.ok) throw new Error('no');
       return r.text();
     }).then(function (b) {
