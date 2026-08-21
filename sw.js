@@ -1,6 +1,6 @@
 
 // Servicio que guarda la web en el movil para que funcione sin cobertura.
-var VERSION = 'plan-794ea61b';
+var VERSION = 'plan-e1c0b2f5';
 // La base de productos tiene SU PROPIA cache, con un nombre que solo depende de
 // lo que hay dentro de basees.txt. Antes se guardaba en la de VERSION, y como
 // VERSION cambia con cualquier cambio del codigo —hasta un comentario—, cada
@@ -9,8 +9,18 @@ var VERSION = 'plan-794ea61b';
 //   - publicacion normal  -> VERSION cambia, CACHE_BASE no: la base se queda
 //   - la base cambia      -> CACHE_BASE cambia: se baja la nueva, y la vieja la
 //                            borra la limpieza de abajo por tener otro nombre
-var CACHE_BASE = 'plan-base-7de0dffd';
-var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "escanear.html", "coste.html", "nutrientes.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=794ea61b", "app.js?v=794ea61b", "plan.json?v=794ea61b", "escaner.json?v=794ea61b", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
+// UNA CAJA POR PAIS. Si hubiera una sola, regenerar la base espanola borraria
+// la britanica y al revés, y el que estuviera en Gibraltar se comeria 3,2 MB
+// por un cambio que no le afecta.
+var CACHES_BASE = {"es": "plan-base-es-7de0dffd", "uk": "plan-base-uk-ccadefce"};
+var ES_BASE = /\/base[a-z]{2}\.txt$/;
+var FICHEROS = ["index.html", "plan.html", "recetas.html", "basicos.html", "compra.html", "escanear.html", "coste.html", "nutrientes.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=e1c0b2f5", "app.js?v=e1c0b2f5", "plan.json?v=e1c0b2f5", "escaner.json?v=e1c0b2f5", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png"];
+
+// De la direccion pedida a la caja que le toca: /baseuk.txt -> plan-base-uk-xxxx
+var cajaDe = function (ruta) {
+  var m = ruta.match(/\/base([a-z]{2})\.txt$/);
+  return m ? CACHES_BASE[m[1]] : null;
+};
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) {
@@ -31,10 +41,13 @@ self.addEventListener('install', function (e) {
 
 self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (claves) {
-    // CACHE_BASE se salva de la quema. Es TODO el arreglo: si se borrara aqui,
-    // separarla del resto no habria servido de nada. Cuando la base cambie de
-    // verdad, la de antes tendra otro nombre y esta misma linea la borrara.
-    return Promise.all(claves.filter(function (k) { return k !== VERSION && k !== CACHE_BASE; })
+    // Las cajas de las bases se salvan de la quema. Es TODO el arreglo: si se
+    // borraran aqui, separarlas del resto no habria servido de nada. Cuando una
+    // base cambie de verdad, la de antes tendra otro nombre y esta misma linea
+    // la borrara -- sin tocar la del otro pais, que conserva el suyo.
+    var salvadas = [VERSION];
+    for (var k2 in CACHES_BASE) salvadas.push(CACHES_BASE[k2]);
+    return Promise.all(claves.filter(function (k) { return salvadas.indexOf(k) < 0; })
                              .map(function (k) { return caches.delete(k); }));
   }).then(function () { return self.clients.claim(); }));
 });
@@ -57,8 +70,10 @@ self.addEventListener('fetch', function (e) {
   // TODAS las caches, asi que en el rato entre instalar la version nueva y
   // activarla podria devolver la base vieja, que es justo lo que no se quiere
   // el dia en que la base cambia.
-  if (/\/basees\.txt$/.test(new URL(e.request.url).pathname)) {
-    e.respondWith(caches.open(CACHE_BASE).then(function (c) {
+  if (ES_BASE.test(new URL(e.request.url).pathname)) {
+    var caja = cajaDe(new URL(e.request.url).pathname);
+    if (!caja) return;                      // una base que esta web no publica
+    e.respondWith(caches.open(caja).then(function (c) {
       return c.match(e.request, { ignoreSearch: true }).then(function (r) {
         return r || fetch(e.request).then(function (n) {
           if (n.ok) c.put(e.request, n.clone());

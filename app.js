@@ -231,7 +231,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=794ea61b').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=e1c0b2f5').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -464,7 +464,7 @@
   // puede exportar desde aqui; sin estas dos claves, cambiar de movil se lo
   // llevaba todo por delante despues de habérselo prometido dos veces.
   var CLAVES = ['compra-marcados', 'plan-dia-actual', 'registro-peso',
-                'escaner-mano', 'escaner-historial'];
+                'escaner-mano', 'escaner-historial', 'escaner-pais'];
 
   var decir = function (txt, mal) {
     aviso.textContent = txt;
@@ -718,7 +718,8 @@ if ('serviceWorker' in navigator) {
   var CLAVE_HIST = 'escaner-historial';  // lo escaneado, para exportarlo luego
 
   var D = null;                          // datos del plan (escaner.json)
-  var BASE = null;                       // base espanola empaquetada
+  var BASE = null;                       // la base del pais elegido, ya bajada
+  var PAIS_BASE = null;                  // de que pais es, para poder decirlo
   var cache = {}, mano = {};
   try { cache = JSON.parse(localStorage.getItem(CLAVE_CACHE) || '{}'); } catch (e) {}
   try { mano = JSON.parse(localStorage.getItem(CLAVE_MANO) || '{}'); } catch (e) {}
@@ -1034,12 +1035,25 @@ if ('serviceWorker' in navigator) {
   // ------------------------------------------------------------------ pintar
   var ICONO = { si: '✓', no: '✗', igual: '=', mirar: '?' };
   var ETIQ = { si: 'Cómpralo', no: 'Déjalo', igual: 'Da igual', mirar: 'Mira la etiqueta' };
+  // DE DONDE SALE CADA NUMERO, dicho en la pantalla y no solo por dentro.
+  //
+  // Hace falta porque el veredicto es rotundo («esto no es carne picada») y los
+  // datos de los que sale NO son todos igual de firmes. Los de Open Food Facts
+  // los escriben voluntarios: en la base hay picadas de cerdo con 0 g de
+  // proteina, que es imposible. Mientras esto lo usaba una sola persona daba
+  // igual, porque sabia de donde venia cada cosa. En cuanto lo usa alguien mas,
+  // un veredicto tajante sobre un dato que puede estar mal es la forma mas
+  // rapida de que dejen de creerse el resto.
+  //
+  // `dudoso: true` significa "esto no lo ha visto nadie de tu confianza": se
+  // dice y se ofrece corregirlo.
   var FUENTE = {
-    tuyo: 'ya lo tenías escaneado',
-    local: 'base guardada en el móvil',
-    off: 'Open Food Facts',
-    mano: 'lo escribiste tú',
-    foto: 'leído de la etiqueta'
+    tuyo:  { txt: 'ya lo tenías escaneado', dudoso: false },
+    local: { txt: 'Open Food Facts, guardado en el móvil', dudoso: true },
+    off:   { txt: 'Open Food Facts, por internet', dudoso: true },
+    mano:  { txt: 'lo escribiste tú del envase', dudoso: false },
+    foto:  { txt: 'leído de la etiqueta con la cámara', dudoso: false },
+    peso:  { txt: 'de tu propia tabla de alimentos', dudoso: false }
   };
 
   var pinta = function (p, v, codigo) {
@@ -1088,8 +1102,19 @@ if ('serviceWorker' in navigator) {
       });
       h.push('<p class="ver-alt"><strong>En su lugar:</strong> ' + alt.join(' · ') + '</p>');
     }
+    var fu = FUENTE[p.fuente];
     h.push('<p class="ver-cod">Código ' + esc(codigo || 'escrito a mano') +
-           (p.fuente && FUENTE[p.fuente] ? ' · ' + FUENTE[p.fuente] : '') + '</p>');
+           (fu ? ' · ' + fu.txt : '') + '</p>');
+    // Si el numero sale de una base que escriben voluntarios, se dice, y se le
+    // da la manera de arreglarlo. Lo que corrija se guarda en "mano" y no se
+    // borra nunca, asi que a el ya no le vuelve a fallar ese producto.
+    if (fu && fu.dudoso) {
+      h.push('<p class="ver-duda">Estos números los ha subido un voluntario a ' +
+             'Open Food Facts y pueden no coincidir con el envase que tienes ' +
+             'delante. <button type="button" class="enlace-solo" data-corrige="' +
+             esc(codigo || '') + '" data-nombre="' + esc(p.nombre || '') +
+             '">No son los de mi envase →</button></p>');
+    }
     h.push('</div>');
     salida.innerHTML = h.join('');
     salida.hidden = false;
@@ -1643,6 +1668,24 @@ if ('serviceWorker' in navigator) {
   }
 
   // --------------------------------------------------------- entrada a mano
+  // «No son los de mi envase»: lleva al formulario de a mano con el codigo y el
+  // nombre ya puestos, para que solo tenga que copiar los cinco numeros. Va por
+  // delegacion porque el boton se pinta con el veredicto, que no existe todavia
+  // cuando esto se registra.
+  salida.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-corrige]') : null;
+    if (!b) return;
+    document.getElementById('mCodigo').value = b.getAttribute('data-corrige') || '';
+    document.getElementById('mNombre').value = b.getAttribute('data-nombre') || '';
+    ['mKcal', 'mProt', 'mHc', 'mGrasa', 'mFibra'].forEach(function (id) {
+      document.getElementById(id).value = '';
+    });
+    estado.textContent = 'Copia los números del envase, por 100 g. Lo que ' +
+                         'escribas se queda guardado y no te lo vuelvo a preguntar.';
+    manual.scrollIntoView({ block: 'center' });
+    document.getElementById('mKcal').focus();
+  });
+
   manual.addEventListener('submit', function (e) {
     e.preventDefault();
     var nom = document.getElementById('mNombre').value;
@@ -1729,24 +1772,71 @@ if ('serviceWorker' in navigator) {
     // cambia con cualquier cambio del codigo, y una direccion nueva son 12,4 MB
     // nuevos para quien no tenga service worker todavia. El de la base solo
     // cambia cuando cambia el fichero, que es cuando hay algo que bajar.
-    var selloBase = j.version_base || j.version;
-    fetch('basees.txt' + (selloBase ? '?v=' + selloBase : '')).then(function (r) {
-      if (!r.ok) throw new Error('no');
-      return r.text();
-    }).then(function (b) {
-      BASE = b;
-      var cuantos = 0, k = -1;
-      while ((k = b.indexOf('\n', k + 1)) >= 0) cuantos++;
-      if (n) {
-        n.textContent = Math.max(0, cuantos - 1).toLocaleString('es-ES') +
-          ' productos españoles guardados en el móvil. Ya funciona sin cobertura.';
+    // QUE PAIS. Cada uno tiene su base y se baja SOLO la suya: son 12,4 MB la
+    // espanola y 9,1 la britanica, y quien compra en Gibraltar no va a escanear
+    // un producto de Mercadona.
+    //
+    // La eleccion se guarda en 'escaner-pais', que esta en la lista de claves
+    // que NO se borran al cambiar de version: si se borrara, cada publicacion
+    // le devolveria a Espana a quien vive en otro sitio.
+    var bases = j.bases || [];
+    if (!bases.length) {
+      if (n) { n.textContent = 'Esta versión no trae ninguna base de productos ' +
+                               'guardada. El escáner necesitará cobertura.'; }
+      return;
+    }
+    var CLAVE_PAIS = 'escaner-pais';
+    var pais = null;
+    try { pais = localStorage.getItem(CLAVE_PAIS); } catch (e) {}
+    if (!bases.some(function (b) { return b.cod === pais; })) pais = bases[0].cod;
+
+    var bajaBase = function (cod) {
+      var b = null;
+      bases.forEach(function (x) { if (x.cod === cod) b = x; });
+      if (!b) return;
+      BASE = '';
+      PAIS_BASE = b;
+      if (n) { n.textContent = 'Bajando los productos de ' + b.nombre + '…'; }
+      // El sello es el DE ESA BASE, no el general: una direccion nueva son
+      // megas nuevos para quien no tenga service worker todavia.
+      fetch(b.fichero + '?v=' + b.sello).then(function (r) {
+        if (!r.ok) throw new Error('no');
+        return r.text();
+      }).then(function (t) {
+        BASE = t;
+        var cuantos = 0, k = -1;
+        while ((k = t.indexOf('\n', k + 1)) >= 0) cuantos++;
+        if (n) {
+          n.textContent = Math.max(0, cuantos - 1).toLocaleString('es-ES') +
+            ' productos de ' + b.nombre + ' guardados en el móvil. ' +
+            'Ya funciona sin cobertura.';
+        }
+      }).catch(function () {
+        if (n) {
+          n.textContent = 'No he podido bajar la base de ' + b.nombre +
+                          '. El escáner funciona igual, pero necesitará cobertura.';
+        }
+      });
+    };
+
+    // El selector solo se pinta si hay mas de un pais que elegir. Con uno solo
+    // seria un boton que no hace nada, y eso ensucia sin informar.
+    if (bases.length > 1) {
+      var sel = document.getElementById('paisBase');
+      if (sel) {
+        sel.hidden = false;
+        sel.innerHTML = bases.map(function (b) {
+          return '<option value="' + b.cod + '"' + (b.cod === pais ? ' selected' : '') +
+                 '>' + b.nombre + ' · ' + b.n.toLocaleString('es-ES') + ' productos</option>';
+        }).join('');
+        sel.addEventListener('change', function () {
+          pais = sel.value;
+          try { localStorage.setItem(CLAVE_PAIS, pais); } catch (e) {}
+          bajaBase(pais);
+        });
       }
-    }).catch(function () {
-      if (n) {
-        n.textContent = 'No he podido bajar la base de productos. El escáner ' +
-                        'funciona igual, pero necesitará cobertura.';
-      }
-    });
+    }
+    bajaBase(pais);
     });
   }).catch(function () {
     estado.textContent = 'No se han podido cargar los datos del plan. ' +
