@@ -211,7 +211,12 @@
     if (d.pesar.length) {
       h += '<p class="etiqueta">Pesar y preparar</p><ul class="lista">';
       d.pesar.forEach(function (p) {
-        h += '<li><span>' + p.nombre + '</span><span class="cant">' + p.gramos + '</span></li>';
+        h += '<li><span>' + p.nombre +
+             // El aviso va DENTRO del <li> del ingrediente, no en una nota
+             // aparte al final: se lee con la patata en la mano, que es cuando
+             // sirve. Al final de la lista ya la has echado toda a la cesta.
+             (p.aviso ? '<em class="ojo"> — ' + p.aviso + '</em>' : '') +
+             '</span><span class="cant">' + p.gramos + '</span></li>';
       });
       h += '</ul>';
     }
@@ -231,7 +236,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=b1ed3a46').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=615fb41f').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
