@@ -236,7 +236,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=2bb64399').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=502bac9b').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -386,7 +386,16 @@
       '<p>Las dos primeras semanas suelen marcar bastante más: es agua y glucógeno, ' +
       'no grasa. Y si te pasas de <strong>1 kg por semana</strong> de forma sostenida, ' +
       'eso ya es una de las señales de ' +
-      '<a href="imprevistos.html">cuándo parar y mirar</a>.</p></div>';
+      '<a href="imprevistos.html">cuándo parar y mirar</a>.</p>' +
+      // La banda del veredicto es MAS ANCHA que la del plan, y hay que decirlo:
+      // si no, la pantalla ensena "entre 0,4 y 0,7" y a la vez llama "al ritmo
+      // previsto" a un -0,3. Son dos bandas distintas y las dos correctas, pero
+      // sin explicarlo se lee como una contradiccion.
+      '<p class="entrada" style="margin-top:14px">El aviso no salta entre ' +
+      '<strong>' + (RITMO_MIN * 0.6).toFixed(1).replace('.', ',') + ' y ' +
+      Math.max(RITMO_MAX * 1.4, 1.0).toFixed(1).replace('.', ',') + ' kg por semana</strong>: ' +
+      'una báscula de casa baila fácil dos o tres décimas de una semana a otra, y ' +
+      'avisar por eso sería avisar todas las semanas.</p></div>';
   };
 
   var tabla = function () {
