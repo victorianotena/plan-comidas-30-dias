@@ -236,7 +236,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=6d14d625').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=5f252b3a').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -244,6 +244,7 @@
 // ============================================================ REGISTRO DE PESO
 (function () {
   'use strict';
+  var RITMO_MIN = 0.381, RITMO_MAX = 0.709, RITMO_MED = 0.545;
   var form = document.getElementById('formPeso');
   if (!form) return;
   var CLAVE = 'registro-peso';
@@ -309,8 +310,8 @@
            '<text x="' + (mx - 8) + '" y="' + (y + 6) + '" text-anchor="end" font-size="16" ' +
            'fill="currentColor" fill-opacity=".75">' + v.toFixed(1).replace('.', ',') + '</text>';
     }
-    // linea prevista: -1 kg por semana desde el primer peso
-    var prev0 = datos[0].p, prevFin = prev0 - (dias / 7) * 1;
+    // linea prevista: el ritmo que dan las calorias del plan, no un 1 a ojo
+    var prev0 = datos[0].p, prevFin = prev0 - (dias / 7) * RITMO_MED;
     if (prevFin > min && prevFin < max) {
       s += '<line x1="' + X(datos[0].f) + '" y1="' + Y(prev0) + '" x2="' + X(datos[datos.length - 1].f) +
            '" y2="' + Y(prevFin) + '" stroke="currentColor" stroke-opacity=".35" ' +
@@ -360,8 +361,13 @@
     // en un caso y "vas bien" en otro, con la misma cifra en pantalla.
     var semMostrado = Math.round(sem * 100) / 100;
     var juicio, clase;
-    if (semMostrado > -0.3) { juicio = 'Vas más lento de lo previsto. Revisa que las cantidades sean las del plan.'; clase = 'atencion'; }
-    else if (semMostrado >= -1.1) { juicio = 'Vas al ritmo previsto.'; clase = ''; }
+    // Los umbrales tambien salian del "1 kg por semana" que ya no existe:
+    // estaban en -0,3 y -1,1. Con el rango real (0,4 a 0,7) un -0,35 se
+    // llamaba "mas lento de lo previsto" estando dentro. Ahora cuelgan del
+    // ritmo calculado, con un 40 % de margen arriba y abajo, que es mas o menos
+    // lo que baila una bascula de casa de una semana a otra.
+    if (semMostrado > -RITMO_MIN * 0.6) { juicio = 'Vas más lento de lo previsto. Revisa que las cantidades sean las del plan.'; clase = 'atencion'; }
+    else if (semMostrado >= -Math.max(RITMO_MAX * 1.4, 1.0)) { juicio = 'Vas al ritmo previsto.'; clase = ''; }
     else { juicio = 'Estás perdiendo más rápido de lo previsto. Conviene subir las calorías y comentarlo con tu médico.'; clase = 'atencion'; }
     caja.innerHTML =
       '<dl class="datos"><div><dt>Peso inicial</dt><dd>' + kg(a.p) + '</dd></div>' +
@@ -373,8 +379,14 @@
       '<div><dt>Pesos apuntados</dt><dd>' + datos.length + '</dd></div>' +
       '<div><dt>Días entre el primero y el último</dt><dd>' + Math.round(dias) + '</dd></div></dl>' +
       '<div class="aviso ' + clase + '"><span class="et">Cómo va</span><p>' + juicio + '</p>' +
-      '<p>El plan prevé perder alrededor de <strong>1 kg por semana</strong>. ' +
-      'La línea de puntos de la gráfica es ese ritmo.</p></div>';
+      '<p>Con las calorías de este plan lo esperable es perder entre ' +
+      '<strong>' + RITMO_MIN.toFixed(1).replace('.', ',') + ' y ' +
+      RITMO_MAX.toFixed(1).replace('.', ',') + ' kg por semana</strong>, según lo que ' +
+      'te muevas. La línea de puntos es el punto medio.</p>' +
+      '<p>Las dos primeras semanas suelen marcar bastante más: es agua y glucógeno, ' +
+      'no grasa. Y si te pasas de <strong>1 kg por semana</strong> de forma sostenida, ' +
+      'eso ya es una de las señales de ' +
+      '<a href="imprevistos.html">cuándo parar y mirar</a>.</p></div>';
   };
 
   var tabla = function () {

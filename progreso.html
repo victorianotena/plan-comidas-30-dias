@@ -8,8 +8,8 @@
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#5E2740">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1211">
 <title>Mi progreso · Plan de comidas</title>
-<link rel="stylesheet" href="estilo.css?v=6d14d625">
-<link rel="manifest" href="manifest.json?v=6d14d625">
+<link rel="stylesheet" href="estilo.css?v=5f252b3a">
+<link rel="manifest" href="manifest.json?v=5f252b3a">
 <link rel="icon" href="favicon.png" sizes="64x64">
 <link rel="apple-touch-icon" href="icono-apple.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -33,12 +33,12 @@
 <main id="principal" class="contenido">
 <h1>Mi progreso</h1>
 <p class="entrada">Apunta tu peso de vez en cuando y comprueba si el plan va al ritmo previsto. <strong>Los datos se guardan solo en este móvil</strong>: no se suben a internet ni los ve nadie más.</p>
-<div class="aviso"><span class="et">Por qué merece la pena apuntarlo</span><p>El plan está calculado para perder <strong>alrededor de 1 kilo por semana</strong>. Si vas mucho más rápido, conviene subir las calorías; si vas mucho más lento, algo no cuadra con las cantidades. Sin anotarlo no hay forma de saberlo.</p><p>Lo suyo es pesarse <strong>siempre en las mismas condiciones</strong>: por la mañana, en ayunas, después de ir al baño y antes de beber nada. Una o dos veces por semana es suficiente; a diario el peso baila mucho por el agua y despista.</p></div>
+<div class="aviso"><span class="et">Por qué merece la pena apuntarlo</span><p>El plan está calculado para perder <strong>entre 0,4 y 0,7 kg por semana</strong>. Si vas mucho más rápido, conviene subir las calorías; si vas mucho más lento, algo no cuadra con las cantidades. Sin anotarlo no hay forma de saberlo.</p><p>Lo suyo es pesarse <strong>siempre en las mismas condiciones</strong>: por la mañana, en ayunas, después de ir al baño y antes de beber nada. Una o dos veces por semana es suficiente; a diario el peso baila mucho por el agua y despista.</p></div>
 <h2>Apuntar un peso</h2>
 <form id="formPeso" class="tarjeta form-peso"><div class="campo"><label for="fechaPeso">Fecha</label><input type="date" id="fechaPeso" required></div><div class="campo"><label for="valorPeso">Peso en kilos</label><input type="text" id="valorPeso" inputmode="decimal" autocomplete="off" placeholder="Por ejemplo 98,4" required></div><button type="submit" class="enlace-video" style="border:none;cursor:pointer">Apuntar</button></form>
 <h2>Cómo va</h2>
 <div id="resumenPeso"></div>
-<div class="tarjeta" style="padding:14px"><svg id="grafica" viewBox="0 0 600 260" role="img" aria-label="Gráfica de la evolución del peso" style="width:100%;height:auto;color:var(--tinta)"></svg><p style="margin:10px 0 0;font-size:16px;color:var(--suave)">La línea continua es tu peso. La línea de puntos es el ritmo previsto de 1 kilo por semana.</p></div>
+<div class="tarjeta" style="padding:14px"><svg id="grafica" viewBox="0 0 600 260" role="img" aria-label="Gráfica de la evolución del peso" style="width:100%;height:auto;color:var(--tinta)"></svg><p style="margin:10px 0 0;font-size:16px;color:var(--suave)">La línea continua es tu peso. La línea de puntos es el ritmo previsto, 0,5 kg por semana.</p></div>
 <h2>Todos los pesos apuntados</h2>
 <div class="tabla-caja"><table id="tablaPeso"><thead><tr><th>Fecha</th><th style="text-align:right">Peso</th><th>&nbsp;</th></tr></thead><tbody></tbody></table></div>
 <button type="button" class="btn-reset" id="borrarTodo">Borrar todo el historial</button>
@@ -58,6 +58,6 @@
   ingrediente a ingrediente.</p>
 </footer>
 <button type="button" class="arriba" id="btnArriba" aria-label="Volver arriba">&#8593;</button>
-<script src="app.js?v=6d14d625"></script>
+<script src="app.js?v=5f252b3a"></script>
 </body>
 </html>
