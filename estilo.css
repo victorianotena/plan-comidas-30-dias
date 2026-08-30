@@ -212,6 +212,9 @@ tr:last-child td{ border-bottom:none }
 /* Un enlace que va solo en su parrafo es un boton disfrazado, y a 25 px de
    alto se falla al pulsarlo con el pulgar. Los de dentro de una frase se
    quedan como estan: agrandarlos rompe el renglon. */
+/* La marca de "estimado" en la tabla de nutrientes. Discreta pero legible: si
+   no se lee, no sirve de aviso. */
+.est{ color:var(--suave); font-weight:600; font-size:.82em; white-space:nowrap }
 .enlace-solo{ display:inline-flex; align-items:center; min-height:44px;
   text-underline-offset:3px }
 /* Botones para cuando el codigo es de balanza. Grandes: se pulsan de pie, en un

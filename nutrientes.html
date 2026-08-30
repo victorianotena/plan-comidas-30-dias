@@ -8,8 +8,8 @@
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#5E2740">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1211">
 <title>Nutrientes · Plan de comidas</title>
-<link rel="stylesheet" href="estilo.css?v=502bac9b">
-<link rel="manifest" href="manifest.json?v=502bac9b">
+<link rel="stylesheet" href="estilo.css?v=e1f82916">
+<link rel="manifest" href="manifest.json?v=e1f82916">
 <link rel="icon" href="favicon.png" sizes="64x64">
 <link rel="apple-touch-icon" href="icono-apple.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,40 +27,41 @@
         <span class="btn-menu-txt">Menú</span>
       </button>
     </div>
-    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="escanear.html">Escanear</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html" aria-current="page" class="actual">Nutrientes</a><a href="progreso.html">Mi progreso</a><a href="imprevistos.html">Imprevistos</a><a href="guia.html">Guía</a></nav>
+    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="escanear.html">Escanear</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html" aria-current="page" class="actual">Nutrientes</a><a href="progreso.html">Mi progreso</a><a href="imprevistos.html">Imprevistos</a><a href="guia.html">Guía</a><a href="recta-final.html">La recta final</a></nav>
   </div>
 </header>
 <main id="principal" class="contenido">
 <h1>Nutrientes</h1>
 <p class="entrada">Se revisaron <strong>24 nutrientes</strong>: <strong>20 quedan cubiertos</strong> y 4 necesitan atención.</p>
-<div class="aviso atencion"><span class="et">De dónde salen estos números</span><p>De las 24 filas de la tabla, <strong>solo la fibra se calcula desde tu plan</strong>. Las otras 23 se estimaron una vez con tablas de composición de alimentos, y <strong>no se actualizan cuando el plan cambia</strong>: desde entonces se han corregido varios productos y una receta.</p><p>El proyecto guarda de cada alimento las calorías, la proteína, los hidratos, la grasa y la fibra —esos sí salen de la etiqueta del producto que tienes en casa—, pero <strong>no guarda vitaminas ni minerales</strong>. Así que estas cifras son una referencia razonable, no una medida de tu plan de hoy. <strong>Para decisiones de salud, la analítica manda sobre esta tabla.</strong></p></div>
+<div class="aviso atencion" id="de-donde"><span class="et">De dónde salen estos números</span><p>De las 24 filas de la tabla, <strong>solo la fibra se calcula desde tu plan</strong>. Las otras 23 se estimaron una vez con tablas de composición de alimentos, y <strong>no se actualizan cuando el plan cambia</strong>: desde entonces se han corregido varios productos y una receta.</p><p>El proyecto guarda de cada alimento las calorías, la proteína, los hidratos, la grasa y la fibra —esos sí salen de la etiqueta del producto que tienes en casa—, pero <strong>no guarda vitaminas ni minerales</strong>. Así que estas cifras son una referencia razonable, no una medida de tu plan de hoy. <strong>Para decisiones de salud, la analítica manda sobre esta tabla.</strong></p></div>
 <nav class="indice-recetas" aria-label="Índice"><p class="etiqueta" style="margin-top:0">Ir directamente a</p><ul class="chips"><li><a href="#tabla">Los 24 nutrientes</a></li><li><a href="#vigilar">Los cuatro a vigilar</a></li><li><a href="#bien">Lo que sale bien</a></li><li><a href="#suplementos">Suplementos</a></li></ul></nav>
 <h2 id="tabla">Los 24 nutrientes</h2>
+<p class="entrada">Las filas marcadas <strong>(est.)</strong> se estimaron una vez con tablas de composición de alimentos y <strong>no se recalculan</strong>. Solo la fibra sale de tu plan de hoy. <a href="#de-donde">Por qué es así</a>.</p>
 <div class="tabla-caja"><table><thead><tr><th>Nutriente</th><th style="text-align:right">Aporta al día</th><th style="text-align:right">Recomendado</th><th style="text-align:right">Cobertura</th></tr></thead><tbody>
-<tr><td>Vitamina K</td><td class="num">277 µg</td><td class="num">70 µg</td><td class="num ok">395 %</td></tr>
-<tr><td>Vitamina B12</td><td class="num">8,2 µg</td><td class="num">2,4 µg</td><td class="num ok">343 %</td></tr>
-<tr><td>Selenio</td><td class="num">234 µg</td><td class="num">70 µg</td><td class="num ok">334 %</td></tr>
-<tr><td>Fósforo</td><td class="num">2.338 mg</td><td class="num">700 mg</td><td class="num ok">334 %</td></tr>
-<tr><td>Vitamina C</td><td class="num">278 mg</td><td class="num">90 mg</td><td class="num ok">309 %</td></tr>
-<tr><td>Niacina B3</td><td class="num">48 mg</td><td class="num">16 mg</td><td class="num ok">301 %</td></tr>
-<tr><td>Omega-3 EPA y DHA</td><td class="num">647 mg</td><td class="num">250 mg</td><td class="num ok">259 %</td></tr>
-<tr><td>Vitamina B6</td><td class="num">4,3 mg</td><td class="num">1,7 mg</td><td class="num ok">252 %</td></tr>
-<tr><td>Hierro</td><td class="num">17,6 mg</td><td class="num">8 mg</td><td class="num ok">220 %</td></tr>
-<tr><td>Riboflavina B2</td><td class="num">3,0 mg</td><td class="num">1,6 mg</td><td class="num ok">190 %</td></tr>
-<tr><td>Zinc</td><td class="num">17,1 mg</td><td class="num">11 mg</td><td class="num ok">155 %</td></tr>
-<tr><td>Potasio</td><td class="num">5.273 mg</td><td class="num">3.500 mg</td><td class="num ok">151 %</td></tr>
-<tr><td>Folato</td><td class="num">553 µg</td><td class="num">400 µg</td><td class="num ok">138 %</td></tr>
-<tr><td>Tiamina B1</td><td class="num">1,5 mg</td><td class="num">1,2 mg</td><td class="num ok">128 %</td></tr>
-<tr><td>Magnesio</td><td class="num">476 mg</td><td class="num">400 mg</td><td class="num ok">119 %</td></tr>
-<tr><td>Vitamina A</td><td class="num">1.071 µg</td><td class="num">900 µg</td><td class="num ok">119 %</td></tr>
-<tr><td>Calcio</td><td class="num">1.181 mg</td><td class="num">1.000 mg</td><td class="num ok">118 %</td></tr>
-<tr><td>Colina</td><td class="num">601 mg</td><td class="num">550 mg</td><td class="num ok">109 %</td></tr>
-<tr><td>Cobre</td><td class="num">1,7 mg</td><td class="num">1,6 mg</td><td class="num ok">103 %</td></tr>
+<tr><td>Vitamina K <small class="est">(est.)</small></td><td class="num">277 µg</td><td class="num">70 µg</td><td class="num ok">395 %</td></tr>
+<tr><td>Vitamina B12 <small class="est">(est.)</small></td><td class="num">8,2 µg</td><td class="num">2,4 µg</td><td class="num ok">343 %</td></tr>
+<tr><td>Selenio <small class="est">(est.)</small></td><td class="num">234 µg</td><td class="num">70 µg</td><td class="num ok">334 %</td></tr>
+<tr><td>Fósforo <small class="est">(est.)</small></td><td class="num">2.338 mg</td><td class="num">700 mg</td><td class="num ok">334 %</td></tr>
+<tr><td>Vitamina C <small class="est">(est.)</small></td><td class="num">278 mg</td><td class="num">90 mg</td><td class="num ok">309 %</td></tr>
+<tr><td>Niacina B3 <small class="est">(est.)</small></td><td class="num">48 mg</td><td class="num">16 mg</td><td class="num ok">301 %</td></tr>
+<tr><td>Omega-3 EPA y DHA <small class="est">(est.)</small></td><td class="num">647 mg</td><td class="num">250 mg</td><td class="num ok">259 %</td></tr>
+<tr><td>Vitamina B6 <small class="est">(est.)</small></td><td class="num">4,3 mg</td><td class="num">1,7 mg</td><td class="num ok">252 %</td></tr>
+<tr><td>Hierro <small class="est">(est.)</small></td><td class="num">17,6 mg</td><td class="num">8 mg</td><td class="num ok">220 %</td></tr>
+<tr><td>Riboflavina B2 <small class="est">(est.)</small></td><td class="num">3,0 mg</td><td class="num">1,6 mg</td><td class="num ok">190 %</td></tr>
+<tr><td>Zinc <small class="est">(est.)</small></td><td class="num">17,1 mg</td><td class="num">11 mg</td><td class="num ok">155 %</td></tr>
+<tr><td>Potasio <small class="est">(est.)</small></td><td class="num">5.273 mg</td><td class="num">3.500 mg</td><td class="num ok">151 %</td></tr>
+<tr><td>Folato <small class="est">(est.)</small></td><td class="num">553 µg</td><td class="num">400 µg</td><td class="num ok">138 %</td></tr>
+<tr><td>Tiamina B1 <small class="est">(est.)</small></td><td class="num">1,5 mg</td><td class="num">1,2 mg</td><td class="num ok">128 %</td></tr>
+<tr><td>Magnesio <small class="est">(est.)</small></td><td class="num">476 mg</td><td class="num">400 mg</td><td class="num ok">119 %</td></tr>
+<tr><td>Vitamina A <small class="est">(est.)</small></td><td class="num">1.071 µg</td><td class="num">900 µg</td><td class="num ok">119 %</td></tr>
+<tr><td>Calcio <small class="est">(est.)</small></td><td class="num">1.181 mg</td><td class="num">1.000 mg</td><td class="num ok">118 %</td></tr>
+<tr><td>Colina <small class="est">(est.)</small></td><td class="num">601 mg</td><td class="num">550 mg</td><td class="num ok">109 %</td></tr>
+<tr><td>Cobre <small class="est">(est.)</small></td><td class="num">1,7 mg</td><td class="num">1,6 mg</td><td class="num ok">103 %</td></tr>
 <tr><td>Fibra</td><td class="num">36,1 g</td><td class="num">25-30 g</td><td class="num ok">131 %</td></tr>
-<tr><td>Yodo</td><td class="num">126 µg</td><td class="num">150 µg</td><td class="num ojo">84 %</td></tr>
-<tr><td>Vitamina E</td><td class="num">10,9 mg</td><td class="num">13 mg</td><td class="num ojo">84 %</td></tr>
-<tr><td>Vitamina D</td><td class="num">4,0 µg</td><td class="num">15 µg</td><td class="num ojo">27 %</td></tr>
-<tr><td>Sodio</td><td class="num">2.936 mg</td><td class="num">menos de 2.000 mg</td><td class="num ojo">147 %</td></tr>
+<tr><td>Yodo <small class="est">(est.)</small></td><td class="num">126 µg</td><td class="num">150 µg</td><td class="num ojo">84 %</td></tr>
+<tr><td>Vitamina E <small class="est">(est.)</small></td><td class="num">10,9 mg</td><td class="num">13 mg</td><td class="num ojo">84 %</td></tr>
+<tr><td>Vitamina D <small class="est">(est.)</small></td><td class="num">4,0 µg</td><td class="num">15 µg</td><td class="num ojo">27 %</td></tr>
+<tr><td>Sodio <small class="est">(est.)</small></td><td class="num">2.936 mg</td><td class="num">menos de 2.000 mg</td><td class="num ojo">147 %</td></tr>
 </tbody></table></div>
 <h2 id="vigilar">Los cuatro puntos a vigilar</h2>
 <div class="aviso"><span class="et">Vitamina D · resuelta con receta</span><p>La comida del plan aporta <strong>4 microgramos al día</strong> de los 15 recomendados, y el Multicentrum suma 5 más: 9 de 15. Con comida sola no se llega, y eso <strong>no es un fallo del plan</strong>: casi ninguna dieta lo cubre, ni siquiera en España.</p><p><strong>Ya está cubierto por otra vía:</strong> tomas <strong>Hidroferol cada quince días</strong>, que es calcifediol recetado. Va por otro camino distinto al de los microgramos diarios de la tabla, así que el 27 % que aparece ahí solo cuenta la comida.</p><p><strong>No añadas más vitamina D por tu cuenta</strong> encima del Hidroferol. La pauta y la dosis las lleva tu médico, y esta página no pinta nada ahí.</p></div>
@@ -106,6 +107,6 @@
   ingrediente a ingrediente.</p>
 </footer>
 <button type="button" class="arriba" id="btnArriba" aria-label="Volver arriba">&#8593;</button>
-<script src="app.js?v=502bac9b"></script>
+<script src="app.js?v=e1f82916"></script>
 </body>
 </html>
