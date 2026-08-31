@@ -236,7 +236,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=e1f82916').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=9f7b5732').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
