@@ -236,7 +236,7 @@
     dia = 1; pintar();
   });
 
-  fetch('plan.json?v=d920901a').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=c27d3008').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
@@ -244,7 +244,7 @@
 // ============================================================ REGISTRO DE PESO
 (function () {
   'use strict';
-  var RITMO_MIN = 0.382, RITMO_MAX = 0.710, RITMO_MED = 0.546;
+  var RITMO_MIN = 0.388, RITMO_MAX = 0.715, RITMO_MED = 0.551;
   var form = document.getElementById('formPeso');
   if (!form) return;
   var CLAVE = 'registro-peso';
@@ -709,6 +709,144 @@ if ('serviceWorker' in navigator) {
     }
     caja.hidden = false;
   }, 1200);
+})();
+
+/* ------------------------------------------------------------- CALENDARIO
+   HOY SE DECIDE EN EL NAVEGADOR, NO AL GENERAR.
+
+   Marcar el dia de hoy en Python es una linea, y seria mentira desde la manana
+   siguiente: la pagina se genera un dia y se lee durante cinco semanas. Es
+   exactamente la fecha relativa que la revision de textos prohibe ("hasta
+   ayer"). Aqui se compara con la fecha del telefono cada vez que se abre, asi
+   que sigue diciendo la verdad aunque no se vuelva a publicar.
+
+   Las fechas se comparan como texto ISO (2026-09-08). Va bien y no depende de
+   zonas horarias: con objetos Date, "hoy" a medianoche se iba al dia anterior
+   segun el huso.                                                             */
+(function () {
+  var rej = document.querySelector('[data-calendario]');
+  if (!rej) return;
+  var dias = [].slice.call(rej.querySelectorAll('.dia-cal'));
+  if (!dias.length) return;
+  var chips = [].slice.call(document.querySelectorAll('.chip-dia'));
+
+  var d = new Date();
+  var HOY = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) +
+            '-' + ('0' + d.getDate()).slice(-2);
+
+  var CLAVE = 'calendario-hechos';
+  var hechos = {};
+  try {
+    JSON.parse(localStorage.getItem(CLAVE) || '[]').forEach(function (k) { hechos[k] = true; });
+  } catch (e) { /* modo privado, o guardado roto: se usa igual, sin recordar */ }
+  var guardar = function () {
+    try { localStorage.setItem(CLAVE, JSON.stringify(Object.keys(hechos))); }
+    catch (e) { /* no se puede guardar; tachar sigue funcionando en la sesion */ }
+  };
+
+  var cuenta = document.getElementById('calCuenta');
+  var contar = function () {
+    var n = 0;
+    dias.forEach(function (a) { if (hechos[a.getAttribute('data-fecha')]) n++; });
+    if (cuenta) cuenta.textContent = n + ' de ' + dias.length + ' días hechos';
+  };
+
+  var chipDe = {};
+  chips.forEach(function (a) { chipDe[a.getAttribute('data-fecha')] = a; });
+
+  var tarjetaHoy = null, pasados = 0;
+  dias.forEach(function (art) {
+    var f = art.getAttribute('data-fecha');
+    var chip = chipDe[f];
+    if (f < HOY) { art.classList.add('pasado'); pasados++; }
+    if (f === HOY) {
+      art.classList.add('es-hoy');
+      if (chip) chip.classList.add('es-hoy');
+      tarjetaHoy = art;
+      var cab = art.querySelector('.dia-cab');
+      if (cab) {
+        var et = document.createElement('span');
+        et.className = 'chapa-hoy';
+        et.textContent = 'HOY';
+        cab.appendChild(et);
+      }
+    }
+    var btn = art.querySelector('.btn-dia');
+    if (!btn) return;
+    var pinta = function () {
+      var ok = !!hechos[f];
+      art.classList.toggle('hecho', ok);
+      if (chip) chip.classList.toggle('hecho', ok);
+      btn.setAttribute('aria-pressed', ok ? 'true' : 'false');
+      btn.textContent = ok ? 'Hecho \u2713' : 'Marcar como hecho';
+    };
+    btn.addEventListener('click', function () {
+      if (hechos[f]) { delete hechos[f]; } else { hechos[f] = true; }
+      guardar(); pinta(); contar();
+    });
+    pinta();
+  });
+  contar();
+
+  var irAHoy = function () {
+    if (!tarjetaHoy) return;
+    if (tarjetaHoy.hidden) tarjetaHoy.hidden = false;
+    tarjetaHoy.scrollIntoView({ block: 'start' });
+  };
+
+  var btnHoy = document.getElementById('calHoy');
+  if (btnHoy && tarjetaHoy) {
+    btnHoy.hidden = false;
+    btnHoy.addEventListener('click', irAHoy);
+  }
+
+  /* OCULTAR LOS DIAS QUE YA HAN PASADO. La pagina son 37.000 px y cada dia que
+     pasa sobra uno mas. Se guarda la eleccion, y si no hay ningun dia pasado
+     la casilla no se ensena: una casilla que no hace nada da mala espina. */
+  var CLAVE_OC = 'calendario-ocultar';
+  var cb = document.getElementById('calOcultar');
+  if (cb) {
+    var meses = [].slice.call(document.querySelectorAll('.mes-cal'));
+    var aplicar = function () {
+      dias.forEach(function (a) {
+        if (a.classList.contains('pasado')) a.hidden = cb.checked;
+      });
+      chips.forEach(function (a) {
+        /* se esconde el <li>, no el enlace: un <li> vacio sigue ocupando su
+           hueco en la rejilla y deja agujeros por todo el indice */
+        if (a.getAttribute('data-fecha') < HOY) a.parentNode.hidden = cb.checked;
+      });
+      /* un mes cuyos dias han desaparecido todos no puede quedarse de rotulo */
+      meses.forEach(function (m) {
+        var n = m.nextElementSibling, visible = false;
+        while (n && n.className.indexOf('mes-cal') < 0) {
+          if (!n.hidden) { visible = true; break; }
+          n = n.nextElementSibling;
+        }
+        m.hidden = !visible;
+      });
+    };
+    if (!pasados) {
+      cb.parentNode.hidden = true;
+    } else {
+      try { cb.checked = localStorage.getItem(CLAVE_OC) === '1'; } catch (e) { }
+      cb.addEventListener('change', function () {
+        try { localStorage.setItem(CLAVE_OC, cb.checked ? '1' : '0'); } catch (e) { }
+        aplicar();
+      });
+      aplicar();
+    }
+  }
+
+  /* ABRIR EN EL DIA DE HOY, pero solo si se ha entrado por arriba y sin ancla:
+     si venia de un enlace #d-... o el navegador ha restaurado donde estaba, no
+     se le mueve la pagina debajo de los dedos. Y tampoco cuando hoy es la
+     PRIMERA tarjeta: ahi saltar solo sirve para esconderle el titulo y el
+     indice a quien abre la pagina, porque no hay nada que saltarse todavia.
+     Va el ultimo, despues de ocultar
+     los pasados, porque si no la posicion se calcula sobre una pagina que aun
+     mide 37.000 px y el salto cae donde no es. */
+  if (tarjetaHoy && tarjetaHoy !== dias[0] && !location.hash && window.scrollY < 4) irAHoy();
 })();
 
 // ==================================================== ESCANER DE LA COMPRA

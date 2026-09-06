@@ -111,6 +111,66 @@ ul.lista li:last-child{ border-bottom:none }
 .caja-rac{ background:var(--acento-claro); border-radius:10px; padding:12px 16px; }
 .caja-rac li{ border-bottom:none; padding:5px 0 }
 
+/* ---- calendario ---- */
+.dia-cal .dia-cab{ margin-bottom:10px; padding-bottom:10px }
+.dia-cal h3{ font-size:20px; flex:1 1 auto }
+.dia-titulo{ font-size:19px; font-weight:600; margin:0 }
+.macros{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px }
+.macro{ background:var(--acento-claro); color:var(--acento); font-weight:700;
+  font-size:15px; padding:5px 11px; border-radius:8px;
+  font-variant-numeric:tabular-nums }
+.dia-cal .lista li{ font-size:17px; padding:7px 0 }
+.dia-cal .etiqueta{ margin:14px 0 4px }
+.dia-cal .etiqueta:first-child{ margin-top:0 }
+.sacar{ background:var(--verde-claro); color:var(--verde); font-weight:600;
+  border-radius:10px; padding:10px 14px; margin:12px 0 0; font-size:16px }
+
+/* INDICE DE FECHAS. La pagina son 37.000 px: unas 45 pantallas de movil. Sin
+   indice, para ver que toca el jueves habia que bajar a ojo contando tarjetas. */
+.cal-barra{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:0 0 14px }
+.btn-cal{ min-height:48px; padding:10px 18px; border-radius:10px; cursor:pointer;
+  border:2px solid var(--acento); background:var(--acento); color:var(--papel);
+  font-family:inherit; font-size:17px; font-weight:700 }
+.btn-cal:focus-visible{ outline:3px solid var(--tinta); outline-offset:3px }
+.cal-ocultar{ display:inline-flex; align-items:center; gap:9px; min-height:48px;
+  font-size:17px; cursor:pointer }
+.cal-ocultar input{ width:24px; height:24px; accent-color:var(--acento) }
+.cal-cuenta{ font-weight:700; color:var(--suave); font-variant-numeric:tabular-nums }
+.indice-cal{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 22px; padding:0; list-style:none }
+.mes-cal{ flex:1 0 100%; margin:8px 0 2px; font-size:15px; font-weight:700;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--suave) }
+.chip-dia{ display:inline-flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:1px; min-width:50px; min-height:50px; padding:4px 7px;
+  border:2px solid var(--linea); border-radius:10px; background:var(--tarjeta);
+  color:var(--tinta); text-decoration:none; font-size:13px; line-height:1.15 }
+.chip-dia b{ font-size:18px; font-variant-numeric:tabular-nums }
+.chip-dia:hover{ border-color:var(--acento) }
+.chip-dia.es-hoy{ background:var(--acento); border-color:var(--acento); color:var(--papel) }
+.chip-dia.hecho{ border-color:var(--verde) }
+
+/* LOS DIAS PASADOS NO SE ATENUAN CON opacity. Bajar la opacidad de una tarjeta
+   entera baja de verdad el contraste del texto, y accesibilidad.js NO lo ve:
+   mide el color calculado, y la opacidad del padre no sale ahi. Seria meter un
+   fallo real justo donde la herramienta esta ciega. Se marcan con el borde. */
+.dia-cal{ scroll-margin-top:var(--alto-cab) }
+.dia-cal.pasado{ border-style:dashed }
+.dia-cal.es-hoy{ border-color:var(--acento);
+  box-shadow:0 0 0 3px var(--acento-claro), var(--sombra) }
+.chapa-hoy{ background:var(--verde); color:var(--papel); font-weight:700; font-size:14px;
+  padding:5px 10px; border-radius:8px; white-space:nowrap }
+.btn-dia{ margin-top:14px; width:100%; min-height:48px; padding:11px 16px;
+  border:2px solid var(--linea); border-radius:10px; background:var(--papel);
+  color:var(--tinta); font-family:inherit; font-size:17px; font-weight:700; cursor:pointer }
+.btn-dia:focus-visible{ outline:3px solid var(--tinta); outline-offset:3px }
+.dia-cal.hecho .btn-dia{ border-color:var(--verde); background:var(--verde-claro);
+  color:var(--verde) }
+
+/* hidden tiene que ganar SIEMPRE. Un display:inline-flex de la clase se lo come
+   sin avisar y el elemento se queda visible: el navegador solo trae
+   [hidden]{display:none} en su hoja por defecto, y esa pierde contra cualquier
+   regla del sitio. */
+[hidden]{ display:none !important }
+
 /* ---- pasos ---- */
 ol.pasos{ margin:0; padding:0; list-style:none; counter-reset:paso; }
 ol.pasos li{ counter-increment:paso; position:relative; padding:0 0 20px 56px; font-size:18px; }

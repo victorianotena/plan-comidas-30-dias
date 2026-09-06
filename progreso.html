@@ -8,8 +8,8 @@
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#5E2740">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1211">
 <title>Mi progreso · Plan de comidas</title>
-<link rel="stylesheet" href="estilo.css?v=d920901a">
-<link rel="manifest" href="manifest.json?v=d920901a">
+<link rel="stylesheet" href="estilo.css?v=c27d3008">
+<link rel="manifest" href="manifest.json?v=c27d3008">
 <link rel="icon" href="favicon.png" sizes="64x64">
 <link rel="apple-touch-icon" href="icono-apple.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,7 +27,7 @@
         <span class="btn-menu-txt">Menú</span>
       </button>
     </div>
-    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="escanear.html">Escanear</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html">Nutrientes</a><a href="progreso.html" aria-current="page" class="actual">Mi progreso</a><a href="imprevistos.html">Imprevistos</a><a href="guia.html">Guía</a><a href="recta-final.html">La recta final</a></nav>
+    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="escanear.html">Escanear</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html">Nutrientes</a><a href="progreso.html" aria-current="page" class="actual">Mi progreso</a><a href="imprevistos.html">Imprevistos</a><a href="guia.html">Guía</a><a href="recta-final.html">La recta final</a><a href="calendario.html">Calendario</a></nav>
   </div>
 </header>
 <main id="principal" class="contenido">
@@ -38,7 +38,7 @@
 <form id="formPeso" class="tarjeta form-peso"><div class="campo"><label for="fechaPeso">Fecha</label><input type="date" id="fechaPeso" required></div><div class="campo"><label for="valorPeso">Peso en kilos</label><input type="text" id="valorPeso" inputmode="decimal" autocomplete="off" placeholder="Por ejemplo 98,4" required></div><button type="submit" class="enlace-video" style="border:none;cursor:pointer">Apuntar</button></form>
 <h2>Cómo va</h2>
 <div id="resumenPeso"></div>
-<div class="tarjeta" style="padding:14px"><svg id="grafica" viewBox="0 0 600 260" role="img" aria-label="Gráfica de la evolución del peso" style="width:100%;height:auto;color:var(--tinta)"></svg><p style="margin:10px 0 0;font-size:16px;color:var(--suave)">La línea continua es tu peso. La línea de puntos es el ritmo previsto, 0,5 kg por semana.</p></div>
+<div class="tarjeta" style="padding:14px"><svg id="grafica" viewBox="0 0 600 260" role="img" aria-label="Gráfica de la evolución del peso" style="width:100%;height:auto;color:var(--tinta)"></svg><p style="margin:10px 0 0;font-size:16px;color:var(--suave)">La línea continua es tu peso. La línea de puntos es el ritmo previsto, 0,6 kg por semana.</p></div>
 <h2>Todos los pesos apuntados</h2>
 <div class="tabla-caja"><table id="tablaPeso"><thead><tr><th>Fecha</th><th style="text-align:right">Peso</th><th>&nbsp;</th></tr></thead><tbody></tbody></table></div>
 <button type="button" class="btn-reset" id="borrarTodo">Borrar todo el historial</button>
@@ -52,12 +52,12 @@
 <footer class="pie contenido">
   <p>Las cantidades salen de una hoja de cálculo que verifica cada día. Ningún día baja
   de <strong>137 gramos de proteína</strong> ni se sale de
-  <strong>1.974 a 2.170 calorías</strong>.</p>
+  <strong>1.955 a 2.158 calorías</strong>.</p>
   <p>Las recetas marcadas con enlace son de <a href="https://www.instagram.com/_aussiefitness/"
   rel="noopener">Dez Cerimagic (@_aussiefitness)</a>. Las cantidades han sido recalculadas
   ingrediente a ingrediente.</p>
 </footer>
 <button type="button" class="arriba" id="btnArriba" aria-label="Volver arriba">&#8593;</button>
-<script src="app.js?v=d920901a"></script>
+<script src="app.js?v=c27d3008"></script>
 </body>
 </html>
