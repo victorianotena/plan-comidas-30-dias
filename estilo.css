@@ -122,6 +122,10 @@ ul.lista li:last-child{ border-bottom:none }
 .dia-cal .lista li{ font-size:17px; padding:7px 0 }
 .dia-cal .etiqueta{ margin:14px 0 4px }
 .dia-cal .etiqueta:first-child{ margin-top:0 }
+.cocinar-hoy{ margin:0 0 12px; padding:12px 14px; border-radius:12px;
+  background:var(--alerta-claro); color:var(--alerta); font-weight:600;
+  border:2px solid var(--alerta) }
+.cocinar-hoy a{ color:inherit }
 .sacar{ background:var(--verde-claro); color:var(--verde); font-weight:600;
   border-radius:10px; padding:10px 14px; margin:12px 0 0; font-size:16px }
 
