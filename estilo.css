@@ -426,7 +426,39 @@ details.plegable > .cuerpo{ padding:0 22px 22px }
 @media (max-width:760px){
   .btn-menu{ display:flex }
   .menu{ display:none; padding-bottom:14px }
-  .menu.abierto{ display:flex; flex-direction:column }
+  /* EL MENU ABIERTO TIENE QUE PODER HACER SCROLL.
+     Son trece secciones dentro de una cabecera pegada arriba: en un movil no
+     caben, y la ultima -- Calendario, la nueva -- quedaba cortada por el borde
+     de abajo y encima tapada por el boton redondo de subir. No es que costara
+     llegar: es que no se podia pulsar.
+     dvh y no vh: en el movil la barra de direcciones aparece y desaparece, y
+     100vh mide la pantalla SIN contarla, asi que el menu se salia igual. Se
+     deja el vh delante como respaldo para navegadores viejos. */
+  /* nowrap ES LO QUE HACE QUE ESTO FUNCIONE, y es lo que menos se ve.
+     .menu lleva flex-wrap:wrap para la barra de escritorio. En columna y con
+     altura maxima, wrap no desborda hacia abajo: ENVUELVE EN UNA SEGUNDA
+     COLUMNA, que se va fuera de la pantalla por la derecha. El menu medía lo
+     mismo que su contenido -- scrollHeight == clientHeight -- asi que no habia
+     scroll posible, y las seis ultimas opciones simplemente no estaban donde
+     mirabas. Se vio poniendo las coordenadas de las trece: 61, 117 ... 397 y
+     otra vez 61. */
+  .menu.abierto{ display:flex; flex-direction:column; flex-wrap:nowrap;
+    max-height:calc(100vh - 120px);
+    max-height:calc(100dvh - 120px);
+    overflow-y:auto; overscroll-behavior:contain;
+    /* NADA de -webkit-overflow-scrolling:touch. Lo puse por costumbre y Chrome
+       lo tira: hace anos que el scroll con inercia es el comportamiento normal,
+       y el verificador de CSS descartado lo caza en seis paginas. */
+    /* que la ultima opcion no acabe debajo del boton de subir */
+    padding-bottom:76px;
+    /* y que quede por encima de el, no debajo: .arriba va a z-index 40 */
+    position:relative; z-index:41; background:var(--tarjeta) }
+  /* Y QUE NO SE APLASTEN. Los enlaces llevan flex:1 1 auto, asi que con una
+     altura maxima encima no desbordaban: se comprimian. El menu media lo
+     mismo que su contenido, scrollHeight == clientHeight, y no habia scroll
+     que hacer -- se veian siete opciones y las otras seis quedaban chafadas.
+     Un max-height con overflow no sirve de nada si los hijos pueden encoger. */
+  .menu.abierto a{ flex:0 0 auto }
   .menu a{ width:100%; justify-content:flex-start; font-size:18px; padding:0 20px }
 }
 @media (max-width:620px){
