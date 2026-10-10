@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<meta name="description" content="Plan de comidas de 30 días con cantidades exactas, recetas y lista de la compra.">
+<meta name="description" content="Plan de comidas de la quincena: qué toca hoy, qué cocinar, recetas y lista de la compra.">
 <link rel="canonical" href="https://victorianotena.github.io/plan-comidas-30-dias/index.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Inicio · Plan de comidas">
-<meta property="og:description" content="Plan de comidas de 30 días con cantidades exactas, recetas y lista de la compra.">
+<meta property="og:description" content="Plan de comidas de la quincena: qué toca hoy, qué cocinar, recetas y lista de la compra.">
 <meta property="og:url" content="https://victorianotena.github.io/plan-comidas-30-dias/index.html">
 <meta property="og:image" content="https://victorianotena.github.io/plan-comidas-30-dias/icono-512.png">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#5E2740">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1211">
 <title>Inicio · Plan de comidas</title>
-<link rel="stylesheet" href="estilo.css?v=cd469004">
-<link rel="manifest" href="manifest.json?v=cd469004">
+<link rel="stylesheet" href="estilo.css?v=c55057ed">
+<link rel="manifest" href="manifest.json?v=c55057ed">
 <link rel="icon" href="favicon.png" sizes="64x64">
 <link rel="apple-touch-icon" href="icono-apple.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -28,18 +28,18 @@
 <header class="cab">
   <div class="contenido">
     <div class="barra">
-      <p class="marca"><a href="index.html">Plan de comidas · 30 días</a></p>
+      <p class="marca"><a href="index.html">Plan de comidas</a></p>
       <button type="button" class="btn-menu" id="btnMenu" aria-expanded="false" aria-controls="menuPrincipal">
         <span class="rayas" aria-hidden="true"><span></span><span></span><span></span></span>
         <span class="btn-menu-txt">Menú</span>
       </button>
     </div>
-    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html" aria-current="page" class="actual">Inicio</a><a href="plan.html">Los 30 días</a><a href="recetas.html">Recetas</a><a href="basicos.html">Lo básico</a><a href="compra.html">La compra</a><a href="escanear.html">Escanear</a><a href="coste.html">Lo que cuesta</a><a href="nutrientes.html">Nutrientes</a><a href="progreso.html">Mi progreso</a><a href="imprevistos.html">Imprevistos</a><a href="guia.html">Guía</a><a href="recta-final.html">La recta final</a><a href="calendario.html">Calendario</a></nav>
+    <nav class="menu" id="menuPrincipal" aria-label="Secciones"><a href="index.html" aria-current="page" class="actual">Inicio</a><a href="plan.html">La quincena</a><a href="recetas.html">Recetas</a><a href="compra.html">La compra</a><a href="basicos.html">Lo básico</a><a href="escanear.html">Escanear</a><a href="progreso.html">Mi progreso</a><a href="imprevistos.html">Imprevistos</a><a href="guia.html">Guía</a></nav>
   </div>
 </header>
 <main id="principal" class="contenido">
-<h1>Plan de comidas para 30 días</h1>
-<p class="entrada">Una comida al día, con todo pesado y calculado. Aquí encontrarás <strong>qué cocinar cada día</strong>, <strong>cuántos gramos poner en la báscula</strong>, <strong>cómo se prepara cada receta</strong> y <strong>qué hay que comprar</strong>.</p>
+<h1>La quincena del 15 de octubre al 29 de octubre</h1>
+<p class="entrada">Una comida al día, con todo pesado y calculado. Aquí está <strong>qué toca comer hoy</strong>, <strong>qué cocinar y cuándo</strong>, <strong>cómo se prepara cada receta</strong> y <strong>qué hay que comprar</strong>.</p>
 
 <section class="instalar" id="instalar" hidden>
   <div class="inst-cab">
@@ -56,50 +56,45 @@
   <div class="hoy-cab">
     <button type="button" class="hoy-nav" id="diaMenos" aria-label="Día anterior">&minus;</button>
     <div class="hoy-num">
-      <span class="hoy-et">Vas por el</span>
-      <strong id="hoyDia">día 1</strong>
-      <span class="hoy-de" id="hoyBloque">Bloque 1</span>
+      <span class="hoy-et">Qué toca</span>
+      <strong id="hoyDia">Hoy</strong>
+      <span class="hoy-de" id="hoyBloque"></span>
     </div>
     <button type="button" class="hoy-nav" id="diaMas" aria-label="Día siguiente">+</button>
   </div>
   <div id="hoyCuerpo" aria-live="polite"></div>
   <div class="hoy-pie">
-    <a class="enlace-video" href="plan.html" id="hoyEnlacePlan">Ver los 30 días</a>
-    <button type="button" class="btn-reset" id="hoyReiniciar" style="margin:0">Volver al día 1</button>
+    <a class="enlace-video" href="plan.html">Ver la quincena entera</a>
+    <button type="button" class="btn-reset" id="hoyReiniciar" style="margin:0">Volver a hoy</button>
   </div>
 </section>
-<noscript><p class="aviso atencion">El seguimiento del día necesita JavaScript. Sin él,
-consulta directamente <a href="plan.html">los 30 días</a>.</p></noscript>
+<noscript><p class="aviso atencion">Lo que toca hoy necesita JavaScript. Sin él,
+consulta directamente <a href="plan.html">la quincena</a>.</p></noscript>
 
-<div class="aviso"><span class="et">Cómo funciona</span><p>No se cocina todos los días. De los 30, <strong>11 días no tocas la cocina</strong>: solo montas el plato y calientas.</p><p>Los otros se reparten en <strong>16 días de preparar tanda</strong> (se cocina cantidad para varios días) y unos pocos en los que el plato principal se hace al momento, como el salmón o el pavo a la plancha.</p><p>En la página de los 30 días, cada jornada de cocina dice exactamente qué preparar, cuánto sale y hasta qué día llega.</p></div>
 <h2>Por dónde empezar</h2>
 <div class="indice">
-<a href="plan.html"><h3>Los 30 días</h3><p>Qué comer cada día y cuánto pesar</p></a>
+<a href="plan.html"><h3>La quincena</h3><p>Qué comer cada día, qué cocinar y cuándo</p></a>
 <a href="recetas.html"><h3>Recetas</h3><p>Cómo se prepara cada cosa, paso a paso</p></a>
-<a href="basicos.html"><h3>Lo básico</h3><p>Patata, brócoli, arroz, pollo… cómo se hacen bien</p></a>
-<a href="compra.html"><h3>La compra</h3><p>Qué comprar en cada quincena, por secciones del súper</p></a>
+<a href="compra.html"><h3>La compra</h3><p>Las dos compras de la quincena, con lo que cuestan</p></a>
+<a href="basicos.html"><h3>Lo básico</h3><p>Patata, arroz, pollo… cómo se hacen bien</p></a>
 <a href="escanear.html"><h3>Escanear</h3><p>Apunta al código de barras y te digo si te sirve</p></a>
-<a href="coste.html"><h3>Lo que cuesta</h3><p>Cuánto vale la compra del mes</p></a>
-<a href="nutrientes.html"><h3>Nutrientes</h3><p>Qué aporta el plan, qué falta y qué suplementos valen la pena</p></a>
 <a href="progreso.html"><h3>Mi progreso</h3><p>Apunta tu peso y mira si vas al ritmo previsto</p></a>
 <a href="imprevistos.html"><h3>Imprevistos</h3><p>Qué hacer el día que no puedes seguir el plan</p></a>
 <a href="guia.html"><h3>Guía</h3><p>Cómo pesar, conservar y congelar</p></a>
-<a href="recta-final.html"><h3>La recta final</h3><p>Del último día del plan a la mudanza</p></a>
-<a href="calendario.html"><h3>Calendario</h3><p>Qué comer cada día, de hoy a la mudanza</p></a>
 </div>
-<h2>Lo que conviene saber antes</h2>
-<dl class="datos"><div><dt>Comidas al día</dt><dd>Una sola</dd></div><div><dt>Proteína mínima</dt><dd>137 gramos</dd></div><div><dt>Calorías</dt><dd>1.955 a 2.158</dd></div><div><dt>Fibra</dt><dd>34 gramos</dd></div><div><dt>Días sin cocinar</dt><dd>11 de 30</dd></div><div><dt>Recetas distintas</dt><dd>17</dd></div></dl>
-<div class="aviso atencion"><span class="et">Ten esto en cuenta</span><p>Al comer una sola vez al día, la comida es <strong>abundante</strong>: entre 1,6 y 2,4 kilos de alimento de una sentada. Es el peso normal de 2.100 calorías con 200 gramos de proteína, pero conviene saberlo antes de empezar.</p><p>Este plan no sustituye el consejo de un médico o un dietista. Si tienes alguna enfermedad, tomas medicación o notas que algo no va bien, consúltalo.</p></div>
+<h2>Lo que conviene saber</h2>
+<dl class="datos"><div><dt>Comidas al día</dt><dd>Una sola</dd></div><div><dt>Calorías de media</dt><dd>2.374</dd></div><div><dt>Proteína de media</dt><dd>198 gramos</dd></div><div><dt>Fibra de media</dt><dd>31 gramos</dd></div><div><dt>De lunes a viernes</dt><dd>2 tuppers como mucho</dd></div><div><dt>Días de cocinar</dt><dd>3</dd></div></dl>
+<div class="aviso atencion"><span class="et">Ten esto en cuenta</span><p>Este plan no sustituye el consejo de un médico o un dietista. Si tienes alguna enfermedad, tomas medicación o notas que algo no va bien, consúltalo.</p></div>
 </main>
 <footer class="pie contenido">
-  <p>Las cantidades salen de un cálculo que se comprueba día a día. En los 30 días del
-  plan, ningún día baja de <strong>137 gramos de proteína</strong> ni se sale de
-  <strong>1.955 a 2.158 calorías</strong>.</p>
+  <p>Las cantidades salen de un cálculo que se comprueba día a día. En la quincena,
+  ningún día baja de <strong>178 gramos de proteína</strong> ni se sale de
+  <strong>2.234 a 2.511 calorías</strong>.</p>
   <p>Las recetas marcadas con enlace son de <a href="https://www.instagram.com/_aussiefitness/"
   rel="noopener">Dez Cerimagic (@_aussiefitness)</a>. Las cantidades han sido recalculadas
   ingrediente a ingrediente.</p>
 </footer>
 <button type="button" class="arriba" id="btnArriba" aria-label="Volver arriba">&#8593;</button>
-<script src="app.js?v=cd469004"></script>
+<script src="app.js?v=c55057ed"></script>
 </body>
 </html>

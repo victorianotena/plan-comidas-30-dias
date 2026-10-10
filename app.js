@@ -151,100 +151,98 @@
 })();
 
 // ============================================================ QUE TOCA HOY
+// La quincena va por FECHAS, no por "dia 1 a 30": el dia que toca es el de hoy.
+// Con un contador guardado en el movil (como en el plan de 30 dias) bastaba un
+// dia sin abrir la pagina para que se quedara atras sin avisar. Las flechas
+// sirven para mirar otro dia, y "Volver a hoy" lo deshace.
 (function () {
   'use strict';
   var caja = document.getElementById('hoy');
   if (!caja) return;
-  var CLAVE = 'plan-dia-actual';
-  var dia = parseInt(localStorage.getItem(CLAVE) || '1', 10);
-  if (!(dia >= 1 && dia <= 30)) dia = 1;
-  var datos = null;
+  var datos = null, fechas = [], i = 0;
 
-  var extra = function (d) {
-    var h = '';
+  var iso = function (d) {
+    var m = d.getMonth() + 1, dd = d.getDate();
+    return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (dd < 10 ? '0' : '') + dd;
+  };
+  var deHoy = function () {
+    var h = iso(new Date());
+    if (h <= fechas[0]) return 0;
+    if (h >= fechas[fechas.length - 1]) return fechas.length - 1;
+    return fechas.indexOf(h);
+  };
+
+  var pintar = function () {
+    var f = fechas[i], d = datos[f], h = '';
+    var hoy = iso(new Date());
+    document.getElementById('hoyDia').textContent = d.titulo;
+    document.getElementById('hoyBloque').textContent =
+      f === hoy ? 'Hoy' : (f < hoy ? 'Ya pasó' : 'Todavía no');
+    if (hoy < fechas[0] && i === 0) {
+      h += '<div class="aviso" style="margin:18px 0"><span class="et">Aún no ha empezado</span>' +
+           '<p>La quincena empieza el ' + datos[fechas[0]].titulo.toLowerCase() + '.</p></div>';
+    }
+    if (hoy > fechas[fechas.length - 1] && i === fechas.length - 1) {
+      h += '<div class="aviso atencion" style="margin:18px 0"><span class="et">La quincena ha terminado</span>' +
+           '<p>Este es el último día que tiene menú. Toca preparar la siguiente.</p></div>';
+    }
+    if (d.cocina) {
+      h += '<div class="aviso" style="margin:18px 0"><span class="et">Hoy toca cocinar</span>' +
+           '<p>' + d.cocina + ' <a href="plan.html#' + d.ancla + '">Qué y cuánto</a></p></div>';
+    }
+    h += '<p class="etiqueta">' + (d.laborable ? 'Los dos tuppers' : 'Lo que se come') + '</p>' +
+         '<ul class="lista caja-rac">';
+    d.platos.forEach(function (p) {
+      h += '<li><a class="ir-receta" href="' + p.enlace + '">' + p.nombre +
+           '<span class="flecha" aria-hidden="true">&rsaquo;</span></a>' +
+           '<span class="cant">' + p.cantidad + '</span></li>';
+      p.con.forEach(function (x) {
+        h += '<li><span>' + x.nombre + '</span><span class="cant">' + x.cantidad + '</span></li>';
+      });
+    });
+    h += '</ul>';
+    if (d.boronio) {
+      h += '<p style="margin:12px 0 0">Con <a href="recetas.html#boronio">boronio</a>: ' +
+           d.boronio + '.</p>';
+    }
+    if (d.ademas.length) {
+      h += '<p class="etiqueta">Además</p><ul class="lista">';
+      d.ademas.forEach(function (p) {
+        h += '<li><span>' + p.nombre + '</span><span class="cant">' + p.cantidad + '</span></li>';
+      });
+      h += '</ul>';
+    }
+    h += '<p style="margin:14px 0 0">' + d.kcal + ' calorías y ' + d.prot + ' de proteína.</p>';
     if (d.sacar) {
       h += '<div class="aviso atencion" style="margin:18px 0 0">' +
            '<span class="et">Antes de acostarte</span><p>' + d.sacar + '</p></div>';
     }
-    if (d.cocina && d.cocina.length) {
-      h += '<details class="tarjeta" style="margin:18px 0 0"><summary>' +
-           '<strong>Todo lo que necesitas hoy para cocinar</strong> (' +
-           d.cocina.length + ' ingredientes)</summary><ul class="lista">';
-      d.cocina.forEach(function (x) {
-        h += '<li><span>' + x.nombre + '</span><span class="cant">' + x.gramos + '</span></li>';
-      });
-      h += '</ul></details>';
-    }
-    if (d.quedan && d.quedan.length) {
-      h += '<details class="tarjeta" style="margin:18px 0 0"><summary>' +
-           '<strong>Lo que va quedando en casa</strong></summary><ul class="lista">';
-      d.quedan.forEach(function (x) {
-        h += '<li><span>' + x.nombre + '</span><span class="cant">' + x.queda +
-             ' · ' + x.pct + ' %</span></li>';
-      });
-      h += '</ul><p style="margin:12px 0 0">Solo se listan los cinco que más bajos van. ' +
-           'No hay compra hasta el día 16.</p></details>';
-    }
-    return h;
-  };
-
-  var pintar = function () {
-    if (!datos) return;
-    var d = datos[String(dia)];
-    document.getElementById('hoyDia').textContent = 'día ' + dia;
-    document.getElementById('hoyBloque').textContent = d.bloque + ' de 6';
-    var h = '';
-    if (d.cocinaHoy) {
-      h += '<div class="aviso" style="margin:18px 0"><span class="et">Hoy toca cocinar en tanda</span>' +
-           '<p>' + d.tanda + '</p></div>';
-    }
-    h += '<p class="hoy-plato">' + d.titulo + '</p>';
-    if (d.recetas.length) {
-      h += '<p class="etiqueta">Ya cocinado</p><ul class="lista caja-rac">';
-      d.recetas.forEach(function (r) {
-        h += '<li><a class="ir-receta" href="' + r.enlace + '">' + r.nombre +
-             '<span class="flecha" aria-hidden="true">&rsaquo;</span></a>' +
-             '<span class="cant">' + r.cantidad + '</span></li>';
-      });
-      h += '</ul>';
-    }
-    if (d.pesar.length) {
-      h += '<p class="etiqueta">Pesar y preparar</p><ul class="lista">';
-      d.pesar.forEach(function (p) {
-        h += '<li><span>' + p.nombre +
-             // El aviso va DENTRO del <li> del ingrediente, no en una nota
-             // aparte al final: se lee con la patata en la mano, que es cuando
-             // sirve. Al final de la lista ya la has echado toda a la cesta.
-             (p.aviso ? '<em class="ojo"> — ' + p.aviso + '</em>' : '') +
-             '</span><span class="cant">' + p.gramos + '</span></li>';
-      });
-      h += '</ul>';
-    }
-    document.getElementById('hoyCuerpo').innerHTML = h + extra(d);
-    document.getElementById('diaMenos').disabled = (dia === 1);
-    document.getElementById('diaMas').disabled = (dia === 30);
-    localStorage.setItem(CLAVE, String(dia));
+    document.getElementById('hoyCuerpo').innerHTML = h;
+    document.getElementById('diaMenos').disabled = (i === 0);
+    document.getElementById('diaMas').disabled = (i === fechas.length - 1);
   };
 
   var mover = function (n) {
-    dia = Math.min(30, Math.max(1, dia + n));
+    i = Math.min(fechas.length - 1, Math.max(0, i + n));
     pintar();
   };
   document.getElementById('diaMenos').addEventListener('click', function () { mover(-1); });
   document.getElementById('diaMas').addEventListener('click', function () { mover(1); });
   document.getElementById('hoyReiniciar').addEventListener('click', function () {
-    dia = 1; pintar();
+    i = deHoy(); pintar();
   });
 
-  fetch('plan.json?v=cd469004').then(function (r) { return r.json(); }).then(function (j) {
-    datos = j; caja.hidden = false; pintar();
+  fetch('plan.json?v=c55057ed').then(function (r) { return r.json(); }).then(function (j) {
+    datos = j; fechas = Object.keys(j).sort();
+    if (!fechas.length) return;
+    i = deHoy(); caja.hidden = false; pintar();
   }).catch(function () { /* sin datos, la seccion se queda oculta */ });
 })();
 
 // ============================================================ REGISTRO DE PESO
 (function () {
   'use strict';
-  var RITMO_MIN = 0.388, RITMO_MAX = 0.715, RITMO_MED = 0.551;
+  var RITMO_MIN = 0.077, RITMO_MAX = 0.403, RITMO_MED = 0.240;
   var form = document.getElementById('formPeso');
   if (!form) return;
   var CLAVE = 'registro-peso';
@@ -711,143 +709,6 @@ if ('serviceWorker' in navigator) {
   }, 1200);
 })();
 
-/* ------------------------------------------------------------- CALENDARIO
-   HOY SE DECIDE EN EL NAVEGADOR, NO AL GENERAR.
-
-   Marcar el dia de hoy en Python es una linea, y seria mentira desde la manana
-   siguiente: la pagina se genera un dia y se lee durante cinco semanas. Es
-   exactamente la fecha relativa que la revision de textos prohibe ("hasta
-   ayer"). Aqui se compara con la fecha del telefono cada vez que se abre, asi
-   que sigue diciendo la verdad aunque no se vuelva a publicar.
-
-   Las fechas se comparan como texto ISO (2026-09-08). Va bien y no depende de
-   zonas horarias: con objetos Date, "hoy" a medianoche se iba al dia anterior
-   segun el huso.                                                             */
-(function () {
-  var rej = document.querySelector('[data-calendario]');
-  if (!rej) return;
-  var dias = [].slice.call(rej.querySelectorAll('.dia-cal'));
-  if (!dias.length) return;
-  var chips = [].slice.call(document.querySelectorAll('.chip-dia'));
-
-  var d = new Date();
-  var HOY = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) +
-            '-' + ('0' + d.getDate()).slice(-2);
-
-  var CLAVE = 'calendario-hechos';
-  var hechos = {};
-  try {
-    JSON.parse(localStorage.getItem(CLAVE) || '[]').forEach(function (k) { hechos[k] = true; });
-  } catch (e) { /* modo privado, o guardado roto: se usa igual, sin recordar */ }
-  var guardar = function () {
-    try { localStorage.setItem(CLAVE, JSON.stringify(Object.keys(hechos))); }
-    catch (e) { /* no se puede guardar; tachar sigue funcionando en la sesion */ }
-  };
-
-  var cuenta = document.getElementById('calCuenta');
-  var contar = function () {
-    var n = 0;
-    dias.forEach(function (a) { if (hechos[a.getAttribute('data-fecha')]) n++; });
-    if (cuenta) cuenta.textContent = n + ' de ' + dias.length + ' días hechos';
-  };
-
-  var chipDe = {};
-  chips.forEach(function (a) { chipDe[a.getAttribute('data-fecha')] = a; });
-
-  var tarjetaHoy = null, pasados = 0;
-  dias.forEach(function (art) {
-    var f = art.getAttribute('data-fecha');
-    var chip = chipDe[f];
-    if (f < HOY) { art.classList.add('pasado'); pasados++; }
-    if (f === HOY) {
-      art.classList.add('es-hoy');
-      if (chip) chip.classList.add('es-hoy');
-      tarjetaHoy = art;
-      var cab = art.querySelector('.dia-cab');
-      if (cab) {
-        var et = document.createElement('span');
-        et.className = 'chapa-hoy';
-        et.textContent = 'HOY';
-        cab.appendChild(et);
-      }
-    }
-    var btn = art.querySelector('.btn-dia');
-    if (!btn) return;
-    var pinta = function () {
-      var ok = !!hechos[f];
-      art.classList.toggle('hecho', ok);
-      if (chip) chip.classList.toggle('hecho', ok);
-      btn.setAttribute('aria-pressed', ok ? 'true' : 'false');
-      btn.textContent = ok ? 'Hecho \u2713' : 'Marcar como hecho';
-    };
-    btn.addEventListener('click', function () {
-      if (hechos[f]) { delete hechos[f]; } else { hechos[f] = true; }
-      guardar(); pinta(); contar();
-    });
-    pinta();
-  });
-  contar();
-
-  var irAHoy = function () {
-    if (!tarjetaHoy) return;
-    if (tarjetaHoy.hidden) tarjetaHoy.hidden = false;
-    tarjetaHoy.scrollIntoView({ block: 'start' });
-  };
-
-  var btnHoy = document.getElementById('calHoy');
-  if (btnHoy && tarjetaHoy) {
-    btnHoy.hidden = false;
-    btnHoy.addEventListener('click', irAHoy);
-  }
-
-  /* OCULTAR LOS DIAS QUE YA HAN PASADO. La pagina son 37.000 px y cada dia que
-     pasa sobra uno mas. Se guarda la eleccion, y si no hay ningun dia pasado
-     la casilla no se ensena: una casilla que no hace nada da mala espina. */
-  var CLAVE_OC = 'calendario-ocultar';
-  var cb = document.getElementById('calOcultar');
-  if (cb) {
-    var meses = [].slice.call(document.querySelectorAll('.mes-cal'));
-    var aplicar = function () {
-      dias.forEach(function (a) {
-        if (a.classList.contains('pasado')) a.hidden = cb.checked;
-      });
-      chips.forEach(function (a) {
-        /* se esconde el <li>, no el enlace: un <li> vacio sigue ocupando su
-           hueco en la rejilla y deja agujeros por todo el indice */
-        if (a.getAttribute('data-fecha') < HOY) a.parentNode.hidden = cb.checked;
-      });
-      /* un mes cuyos dias han desaparecido todos no puede quedarse de rotulo */
-      meses.forEach(function (m) {
-        var n = m.nextElementSibling, visible = false;
-        while (n && n.className.indexOf('mes-cal') < 0) {
-          if (!n.hidden) { visible = true; break; }
-          n = n.nextElementSibling;
-        }
-        m.hidden = !visible;
-      });
-    };
-    if (!pasados) {
-      cb.parentNode.hidden = true;
-    } else {
-      try { cb.checked = localStorage.getItem(CLAVE_OC) === '1'; } catch (e) { }
-      cb.addEventListener('change', function () {
-        try { localStorage.setItem(CLAVE_OC, cb.checked ? '1' : '0'); } catch (e) { }
-        aplicar();
-      });
-      aplicar();
-    }
-  }
-
-  /* ABRIR EN EL DIA DE HOY, pero solo si se ha entrado por arriba y sin ancla:
-     si venia de un enlace #d-... o el navegador ha restaurado donde estaba, no
-     se le mueve la pagina debajo de los dedos. Y tampoco cuando hoy es la
-     PRIMERA tarjeta: ahi saltar solo sirve para esconderle el titulo y el
-     indice a quien abre la pagina, porque no hay nada que saltarse todavia.
-     Va el ultimo, despues de ocultar
-     los pasados, porque si no la posicion se calcula sobre una pagina que aun
-     mide 37.000 px y el salto cae donde no es. */
-  if (tarjetaHoy && tarjetaHoy !== dias[0] && !location.hash && window.scrollY < 4) irAHoy();
-})();
 
 // ==================================================== ESCANER DE LA COMPRA
 (function () {
