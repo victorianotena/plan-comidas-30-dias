@@ -232,7 +232,7 @@
     i = deHoy(); pintar();
   });
 
-  fetch('plan.json?v=c55057ed').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=759346fb').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; fechas = Object.keys(j).sort();
     if (!fechas.length) return;
     i = deHoy(); caja.hidden = false; pintar();
