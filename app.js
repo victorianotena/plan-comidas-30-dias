@@ -193,8 +193,8 @@
     h += '<p class="etiqueta">' + (d.laborable ? 'Los dos tuppers' : 'Lo que se come') + '</p>' +
          '<ul class="lista caja-rac">';
     d.platos.forEach(function (p) {
-      h += '<li><a class="ir-receta" href="' + p.enlace + '">' + p.nombre +
-           '<span class="flecha" aria-hidden="true">&rsaquo;</span></a>' +
+      h += '<li>' + (p.enlace ? '<a class="ir-receta" href="' + p.enlace + '">' + p.nombre +
+           '<span class="flecha" aria-hidden="true">&rsaquo;</span></a>' : '<span>' + p.nombre + '</span>') +
            '<span class="cant">' + p.cantidad + '</span></li>';
       p.con.forEach(function (x) {
         h += '<li><span>' + x.nombre + '</span><span class="cant">' + x.cantidad + '</span></li>';
@@ -232,7 +232,7 @@
     i = deHoy(); pintar();
   });
 
-  fetch('plan.json?v=93741703').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=98b6db3d').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; fechas = Object.keys(j).sort();
     if (!fechas.length) return;
     i = deHoy(); caja.hidden = false; pintar();
@@ -242,7 +242,7 @@
 // ============================================================ REGISTRO DE PESO
 (function () {
   'use strict';
-  var RITMO_MIN = 0.105, RITMO_MAX = 0.431, RITMO_MED = 0.268;
+  var RITMO_MIN = 0.141, RITMO_MAX = 0.467, RITMO_MED = 0.304;
   var form = document.getElementById('formPeso');
   if (!form) return;
   var CLAVE = 'registro-peso';
