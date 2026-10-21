@@ -190,17 +190,20 @@
       h += '<div class="aviso" style="margin:18px 0"><span class="et">Hoy toca cocinar</span>' +
            '<p>' + d.cocina + ' <a href="plan.html#' + d.ancla + '">Qué y cuánto</a></p></div>';
     }
-    h += '<p class="etiqueta">' + (d.laborable ? 'Los dos tuppers' : 'Lo que se come') + '</p>' +
-         '<ul class="lista caja-rac">';
-    d.platos.forEach(function (p) {
-      h += '<li>' + (p.enlace ? '<a class="ir-receta" href="' + p.enlace + '">' + p.nombre +
-           '<span class="flecha" aria-hidden="true">&rsaquo;</span></a>' : '<span>' + p.nombre + '</span>') +
-           '<span class="cant">' + p.cantidad + '</span></li>';
-      p.con.forEach(function (x) {
-        h += '<li><span>' + x.nombre + '</span><span class="cant">' + x.cantidad + '</span></li>';
+    d.comidas.forEach(function (cm) {
+      h += '<p class="etiqueta">' + cm.titulo +
+           (d.comidas.length > 1 ? ' · ' + cm.kcal + ' calorías' : '') + '</p>' +
+           '<ul class="lista caja-rac">';
+      cm.platos.forEach(function (p) {
+        h += '<li>' + (p.enlace ? '<a class="ir-receta" href="' + p.enlace + '">' + p.nombre +
+             '<span class="flecha" aria-hidden="true">&rsaquo;</span></a>' : '<span>' + p.nombre + '</span>') +
+             '<span class="cant">' + p.cantidad + '</span></li>';
+        p.con.forEach(function (x) {
+          h += '<li><span>' + x.nombre + '</span><span class="cant">' + x.cantidad + '</span></li>';
+        });
       });
+      h += '</ul>';
     });
-    h += '</ul>';
     if (d.boronio) {
       h += '<p style="margin:12px 0 0">Con <a href="recetas.html#boronio">boronio</a>: ' +
            d.boronio + '.</p>';
@@ -232,7 +235,7 @@
     i = deHoy(); pintar();
   });
 
-  fetch('plan.json?v=98b6db3d').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=f8c3e76e').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; fechas = Object.keys(j).sort();
     if (!fechas.length) return;
     i = deHoy(); caja.hidden = false; pintar();
@@ -242,7 +245,7 @@
 // ============================================================ REGISTRO DE PESO
 (function () {
   'use strict';
-  var RITMO_MIN = 0.141, RITMO_MAX = 0.467, RITMO_MED = 0.304;
+  var RITMO_MIN = 0.290, RITMO_MAX = 0.616, RITMO_MED = 0.453;
   var form = document.getElementById('formPeso');
   if (!form) return;
   var CLAVE = 'registro-peso';
