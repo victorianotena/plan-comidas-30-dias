@@ -235,7 +235,7 @@
     i = deHoy(); pintar();
   });
 
-  fetch('plan.json?v=eff1404c').then(function (r) { return r.json(); }).then(function (j) {
+  fetch('plan.json?v=3adb5991').then(function (r) { return r.json(); }).then(function (j) {
     datos = j; fechas = Object.keys(j).sort();
     if (!fechas.length) return;
     i = deHoy(); caja.hidden = false; pintar();
@@ -245,7 +245,7 @@
 // ============================================================ REGISTRO DE PESO
 (function () {
   'use strict';
-  var RITMO_MIN = 0.268, RITMO_MAX = 0.594, RITMO_MED = 0.431;
+  var RITMO_MIN = 0.235, RITMO_MAX = 0.561, RITMO_MED = 0.398;
   var form = document.getElementById('formPeso');
   if (!form) return;
   var CLAVE = 'registro-peso';
