@@ -245,7 +245,7 @@
 // ============================================================ REGISTRO DE PESO
 (function () {
   'use strict';
-  var RITMO_MIN = 0.226, RITMO_MAX = 0.552, RITMO_MED = 0.389;
+  var RITMO_MIN = 0.207, RITMO_MAX = 0.533, RITMO_MED = 0.370;
   var form = document.getElementById('formPeso');
   if (!form) return;
   var CLAVE = 'registro-peso';
