@@ -1,6 +1,6 @@
 
 // Servicio que guarda la web en el movil para que funcione sin cobertura.
-var VERSION = 'plan-3adb5991';
+var VERSION = 'plan-ded49074';
 // La base de productos tiene SU PROPIA cache, con un nombre que solo depende de
 // lo que hay dentro de basees.txt. Antes se guardaba en la de VERSION, y como
 // VERSION cambia con cualquier cambio del codigo —hasta un comentario—, cada
@@ -14,7 +14,7 @@ var VERSION = 'plan-3adb5991';
 // por un cambio que no le afecta.
 var CACHES_BASE = {"es": "plan-base-es-7de0dffd", "uk": "plan-base-uk-ccadefce"};
 var ES_BASE = /\/base[a-z]{2}\.txt$/;
-var FICHEROS = ["index.html", "plan.html", "recetas.html", "compra.html", "basicos.html", "escanear.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=3adb5991", "app.js?v=3adb5991", "plan.json?v=3adb5991", "escaner.json?v=3adb5991", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png", "404.html"];
+var FICHEROS = ["index.html", "plan.html", "recetas.html", "compra.html", "basicos.html", "escanear.html", "progreso.html", "imprevistos.html", "guia.html", "estilo.css?v=ded49074", "app.js?v=ded49074", "plan.json?v=ded49074", "escaner.json?v=ded49074", "icono-192.png", "icono-512.png", "icono-apple.png", "favicon.png", "404.html"];
 
 // De la direccion pedida a la caja que le toca: /baseuk.txt -> plan-base-uk-xxxx
 var cajaDe = function (ruta) {
